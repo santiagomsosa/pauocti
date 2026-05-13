@@ -1,0 +1,163 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import Image from 'next/image'
+import { toast } from 'sonner'
+import { Trophy, Camera, ChevronDown, ChevronUp } from 'lucide-react'
+import { PhotoUploadModal } from '@/components/PhotoUploadModal'
+import { Badge } from '@/components/ui/badge'
+import type { Challenge, Photo } from '@/types'
+
+function ChallengeCard({
+  challenge,
+  onUpload,
+}: {
+  challenge: Challenge
+  onUpload: (c: Challenge) => void
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const [photos, setPhotos] = useState<Photo[]>([])
+  const [loadingPhotos, setLoadingPhotos] = useState(false)
+
+  async function loadPhotos() {
+    if (photos.length > 0) return
+    setLoadingPhotos(true)
+    const res = await fetch(`/api/photos?challengeId=${challenge.id}`)
+    if (res.ok) {
+      const data = await res.json()
+      setPhotos(data.photos)
+    }
+    setLoadingPhotos(false)
+  }
+
+  async function handleExpand() {
+    if (!expanded) await loadPhotos()
+    setExpanded((v) => !v)
+  }
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-rose-50 overflow-hidden">
+      <div className="p-4 space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <span className="text-3xl">{challenge.emoji}</span>
+            <div>
+              <h3 className="font-semibold text-stone-800">{challenge.title}</h3>
+              <p className="text-sm text-stone-500 mt-0.5">{challenge.description}</p>
+            </div>
+          </div>
+          {(challenge.photo_count ?? 0) > 0 && (
+            <Badge className="bg-rose-100 text-rose-500 border-0 flex-shrink-0">
+              {challenge.photo_count} foto{(challenge.photo_count ?? 0) !== 1 ? 's' : ''}
+            </Badge>
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => onUpload(challenge)}
+            className="flex items-center gap-1.5 bg-rose-400 hover:bg-rose-500 text-white text-sm px-3 py-1.5 rounded-full transition-colors font-medium"
+          >
+            <Camera className="w-3.5 h-3.5" />
+            Cumplir reto
+          </button>
+
+          {(challenge.photo_count ?? 0) > 0 && (
+            <button
+              onClick={handleExpand}
+              className="flex items-center gap-1 text-stone-400 hover:text-stone-600 text-sm px-2"
+            >
+              {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              Ver fotos
+            </button>
+          )}
+        </div>
+      </div>
+
+      {expanded && (
+        <div className="border-t border-rose-50 p-3">
+          {loadingPhotos ? (
+            <div className="grid grid-cols-3 gap-1.5">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="aspect-square bg-stone-100 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-1.5">
+              {photos.map((p) => (
+                <div key={p.id} className="relative aspect-square rounded-lg overflow-hidden bg-stone-100">
+                  <Image src={p.url} alt={p.guest_name} fill className="object-cover" sizes="120px" />
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-1 py-0.5">
+                    <p className="text-white text-[9px] truncate">{p.guest_name}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function RetosPage() {
+  const [challenges, setChallenges] = useState<Challenge[]>([])
+  const [loading, setLoading] = useState(true)
+  const [uploadChallenge, setUploadChallenge] = useState<Challenge | null>(null)
+
+  useEffect(() => {
+    fetch('/api/challenges')
+      .then((r) => r.json())
+      .then((d) => setChallenges(d.challenges ?? []))
+      .catch(() => toast.error('Error al cargar los retos'))
+      .finally(() => setLoading(false))
+  }, [])
+
+  function handleUploaded() {
+    // Recargar challenges para actualizar contadores
+    fetch('/api/challenges')
+      .then((r) => r.json())
+      .then((d) => setChallenges(d.challenges ?? []))
+  }
+
+  return (
+    <div className="py-6 space-y-4">
+      <div>
+        <h1 className="text-2xl font-bold text-stone-800">Retos</h1>
+        <p className="text-sm text-stone-500">Completá los retos fotográficos</p>
+      </div>
+
+      {loading ? (
+        <div className="space-y-3">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-white rounded-xl p-4 animate-pulse space-y-2 h-24" />
+          ))}
+        </div>
+      ) : challenges.length === 0 ? (
+        <div className="flex flex-col items-center py-16 space-y-3 text-center">
+          <Trophy className="w-12 h-12 text-stone-300" />
+          <p className="text-stone-500">Todavía no hay retos cargados</p>
+          <p className="text-xs text-stone-400">Los organizadores los agregarán pronto</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {challenges.map((c) => (
+            <ChallengeCard key={c.id} challenge={c} onUpload={setUploadChallenge} />
+          ))}
+        </div>
+      )}
+
+      {uploadChallenge && (
+        <PhotoUploadModal
+          open={!!uploadChallenge}
+          onClose={() => setUploadChallenge(null)}
+          onUploaded={() => {
+            handleUploaded()
+            setUploadChallenge(null)
+          }}
+          challenge={uploadChallenge}
+        />
+      )}
+    </div>
+  )
+}
