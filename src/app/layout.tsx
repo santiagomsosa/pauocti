@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Montserrat, MonteCarlo } from "next/font/google";
+import { Montserrat, Pinyon_Script } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -8,8 +8,8 @@ const montserrat = Montserrat({
   subsets: ["latin"],
 });
 
-const monteCarlo = MonteCarlo({
-  variable: "--font-montecarlo",
+const pinyonScript = Pinyon_Script({
+  variable: "--font-pinyon-script",
   weight: "400",
   subsets: ["latin"],
 });
@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${montserrat.variable} ${monteCarlo.variable} h-full antialiased`}>
+    <html lang="es" className={`${montserrat.variable} ${pinyonScript.variable} h-full antialiased`}>
       <body className="min-h-full bg-terracotta-50">
         {children}
         <Toaster richColors position="top-center" />

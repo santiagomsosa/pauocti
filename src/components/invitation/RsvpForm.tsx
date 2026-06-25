@@ -3,13 +3,16 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { toast } from 'sonner'
-import { Loader2, Plus, Trash2 } from 'lucide-react'
+import { Loader2, Plus, Trash2, Check } from 'lucide-react'
 import type { Guest, PlusOneInput } from '@/types'
 
 interface RsvpFormProps {
   guest: Guest
   onSubmitted: (guest: Guest) => void
 }
+
+const inputClass =
+  'w-full rounded-lg border border-stone-300/70 bg-white/40 px-3 py-2 text-sm outline-none backdrop-blur-sm focus:border-terracotta-300 focus:ring-2 focus:ring-terracotta-100 disabled:opacity-50'
 
 function emptyPlusOne(): PlusOneInput {
   return { name: '', email: '', rsvp_status: 'attending', dietary_restrictions: '' }
@@ -75,31 +78,39 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       onSubmit={handleSubmit}
-      className="bg-white rounded-2xl shadow-md p-6 space-y-5"
+      className="rounded-3xl border border-terracotta-200/70 bg-terracotta-100/40 p-6 space-y-5 shadow-sm"
     >
-      <div className="space-y-2">
-        <p className="text-sm font-medium text-stone-700">¿Vas a acompañarnos?</p>
-        <div className="grid grid-cols-2 gap-2">
-          <button
+      <div className="space-y-2 text-center">
+        <p className="text-xs uppercase tracking-[0.25em] text-terracotta-500">Confirmá tu asistencia</p>
+        <p className="text-stone-700 leading-relaxed">
+          {guest.name}, nos gustaría que nos acompañes en este día tan especial
+        </p>
+        <div className="grid grid-cols-2 gap-3 pt-1">
+          <motion.button
             type="button"
             onClick={() => setAttending('attending')}
             disabled={loading}
-            className={`rounded-lg py-2.5 text-sm font-medium border transition ${
+            animate={attending === null ? { scale: [1, 1.04, 1] } : { scale: 1 }}
+            transition={attending === null ? { repeat: Infinity, duration: 1.6 } : { duration: 0.2 }}
+            className={`flex items-center justify-center gap-1.5 rounded-full py-3 text-sm font-semibold border-2 transition ${
               attending === 'attending'
-                ? 'bg-terracotta-400 border-terracotta-400 text-white'
-                : 'border-stone-200 text-stone-600 hover:border-terracotta-300'
+                ? 'bg-terracotta-500 border-terracotta-500 text-white shadow-md'
+                : attending === 'declined'
+                  ? 'bg-transparent border-stone-300 text-stone-500'
+                  : 'bg-terracotta-400 border-terracotta-400 text-white shadow-md hover:bg-terracotta-500'
             }`}
           >
+            {attending === 'attending' && <Check className="w-4 h-4" />}
             ¡Sí, voy!
-          </button>
+          </motion.button>
           <button
             type="button"
             onClick={() => setAttending('declined')}
             disabled={loading}
-            className={`rounded-lg py-2.5 text-sm font-medium border transition ${
+            className={`rounded-full py-3 text-sm font-semibold border-2 transition ${
               attending === 'declined'
                 ? 'bg-stone-600 border-stone-600 text-white'
-                : 'border-stone-200 text-stone-600 hover:border-stone-400'
+                : 'bg-transparent border-stone-300 text-stone-500 hover:border-stone-400'
             }`}
           >
             No puedo ir
@@ -116,7 +127,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
             disabled={loading}
             rows={2}
             placeholder="Ej: vegetariano, sin TACC, alergias..."
-            className="w-full resize-none rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-terracotta-300 focus:ring-2 focus:ring-terracotta-100 disabled:opacity-50"
+            className={`resize-none ${inputClass}`}
           />
         </div>
       )}
@@ -147,7 +158,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="bg-cream-50 rounded-xl p-3 space-y-2"
+                className="rounded-xl border border-stone-200/70 p-3 space-y-2"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-stone-500">Acompañante {i + 1}</span>
@@ -166,7 +177,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
                   value={p.name}
                   onChange={(e) => updatePlusOne(i, { name: e.target.value })}
                   disabled={loading}
-                  className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-terracotta-300 focus:ring-2 focus:ring-terracotta-100 disabled:opacity-50"
+                  className={inputClass}
                 />
                 <input
                   type="email"
@@ -174,13 +185,13 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
                   value={p.email}
                   onChange={(e) => updatePlusOne(i, { email: e.target.value })}
                   disabled={loading}
-                  className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-terracotta-300 focus:ring-2 focus:ring-terracotta-100 disabled:opacity-50"
+                  className={inputClass}
                 />
                 <select
                   value={p.rsvp_status}
                   onChange={(e) => updatePlusOne(i, { rsvp_status: e.target.value as 'attending' | 'declined' })}
                   disabled={loading}
-                  className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-terracotta-300 focus:ring-2 focus:ring-terracotta-100 disabled:opacity-50"
+                  className={inputClass}
                 >
                   <option value="attending">Asistirá</option>
                   <option value="declined">No asistirá</option>
@@ -191,7 +202,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
                   value={p.dietary_restrictions}
                   onChange={(e) => updatePlusOne(i, { dietary_restrictions: e.target.value })}
                   disabled={loading}
-                  className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-terracotta-300 focus:ring-2 focus:ring-terracotta-100 disabled:opacity-50"
+                  className={inputClass}
                 />
               </motion.div>
             ))}
@@ -202,7 +213,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
       <button
         type="submit"
         disabled={loading || !attending}
-        className="w-full rounded-lg bg-terracotta-400 py-2.5 text-sm font-medium text-white transition hover:bg-terracotta-500 disabled:opacity-50"
+        className="w-full rounded-full bg-terracotta-400 py-2.5 text-sm font-medium text-white transition hover:bg-terracotta-500 disabled:opacity-50"
       >
         {loading ? (
           <span className="flex items-center justify-center gap-2">

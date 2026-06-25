@@ -4,9 +4,18 @@ import type { Settings } from '@/types'
 const KEYS: (keyof Settings)[] = [
   'wedding_datetime',
   'couple_names',
+  'ceremony_venue',
+  'ceremony_address',
+  'ceremony_map_url',
   'venue',
   'venue_address',
   'venue_map_url',
+  'bank_ars_account',
+  'bank_ars_alias',
+  'bank_ars_cbu',
+  'bank_usd_account',
+  'bank_usd_alias',
+  'bank_usd_cbu',
 ]
 
 export async function getSettings(): Promise<Settings> {

@@ -19,9 +19,18 @@ import type { Guest, Challenge, Photo, Message, MusicRequest, Settings } from '@
 const EMPTY_SETTINGS: Settings = {
   wedding_datetime: null,
   couple_names: null,
+  ceremony_venue: null,
+  ceremony_address: null,
+  ceremony_map_url: null,
   venue: null,
   venue_address: null,
   venue_map_url: null,
+  bank_ars_account: null,
+  bank_ars_alias: null,
+  bank_ars_cbu: null,
+  bank_usd_account: null,
+  bank_usd_alias: null,
+  bank_usd_cbu: null,
 }
 
 export default function AdminPage() {

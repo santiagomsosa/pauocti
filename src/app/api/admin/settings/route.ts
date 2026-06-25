@@ -5,9 +5,18 @@ import { z } from 'zod'
 const schema = z.object({
   wedding_datetime: z.string().trim().optional().or(z.literal('')),
   couple_names: z.string().max(100).trim().optional().or(z.literal('')),
+  ceremony_venue: z.string().max(200).trim().optional().or(z.literal('')),
+  ceremony_address: z.string().max(300).trim().optional().or(z.literal('')),
+  ceremony_map_url: z.string().max(500).trim().optional().or(z.literal('')),
   venue: z.string().max(200).trim().optional().or(z.literal('')),
   venue_address: z.string().max(300).trim().optional().or(z.literal('')),
   venue_map_url: z.string().max(500).trim().optional().or(z.literal('')),
+  bank_ars_account: z.string().max(60).trim().optional().or(z.literal('')),
+  bank_ars_alias: z.string().max(60).trim().optional().or(z.literal('')),
+  bank_ars_cbu: z.string().max(40).trim().optional().or(z.literal('')),
+  bank_usd_account: z.string().max(60).trim().optional().or(z.literal('')),
+  bank_usd_alias: z.string().max(60).trim().optional().or(z.literal('')),
+  bank_usd_cbu: z.string().max(40).trim().optional().or(z.literal('')),
 })
 
 export async function GET() {

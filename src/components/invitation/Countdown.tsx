@@ -33,19 +33,21 @@ export function Countdown({ weddingDatetime }: { weddingDatetime: string | null 
   ]
 
   return (
-    <div className="flex justify-center gap-3">
+    <div className="flex justify-center divide-x divide-terracotta-200/60">
       {units.map((u) => (
-        <div key={u.label} className="bg-white rounded-xl shadow-sm px-3 py-2.5 min-w-16 text-center">
-          <motion.span
-            key={u.value}
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25 }}
-            className="block font-script text-3xl text-terracotta-500"
-          >
-            {u.value}
-          </motion.span>
-          <span className="text-[11px] uppercase tracking-wide text-stone-400">{u.label}</span>
+        <div key={u.label} className="flex flex-col items-center px-3">
+          <div className="flex h-11 w-16 items-center justify-center">
+            <motion.span
+              key={u.value}
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+              className="font-script text-4xl leading-none text-terracotta-500 tabular-nums"
+            >
+              {String(u.value).padStart(2, '0')}
+            </motion.span>
+          </div>
+          <span className="text-[11px] uppercase tracking-widest text-stone-400">{u.label}</span>
         </div>
       ))}
     </div>

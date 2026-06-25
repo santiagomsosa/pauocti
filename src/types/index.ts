@@ -19,9 +19,18 @@ export interface Guest {
 export interface Settings {
   wedding_datetime: string | null
   couple_names: string | null
+  ceremony_venue: string | null
+  ceremony_address: string | null
+  ceremony_map_url: string | null
   venue: string | null
   venue_address: string | null
   venue_map_url: string | null
+  bank_ars_account: string | null
+  bank_ars_alias: string | null
+  bank_ars_cbu: string | null
+  bank_usd_account: string | null
+  bank_usd_alias: string | null
+  bank_usd_cbu: string | null
 }
 
 export interface PlusOneInput {
