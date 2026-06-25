@@ -16,12 +16,16 @@ export async function POST(request: NextRequest) {
     const supabase = createServerClient()
     const { data: guest, error } = await supabase
       .from('guests')
-      .select('id, name, code')
+      .select('id, name, code, is_active')
       .eq('code', code)
       .single()
 
     if (error || !guest) {
       return NextResponse.json({ error: 'Código inválido. Revisá la invitación.' }, { status: 401 })
+    }
+
+    if (!guest.is_active) {
+      return NextResponse.json({ error: 'Tu acceso todavía no está habilitado.' }, { status: 403 })
     }
 
     const session = encodeSession({ guestId: guest.id, guestName: name })
