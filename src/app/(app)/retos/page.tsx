@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { Trophy, Camera, ChevronDown, ChevronUp } from 'lucide-react'
 import { PhotoUploadModal } from '@/components/PhotoUploadModal'
 import { Badge } from '@/components/ui/badge'
+import { HandDrawnUnderline } from '@/components/decorations'
 import type { Challenge, Photo } from '@/types'
 
 function ChallengeCard({
@@ -36,7 +37,7 @@ function ChallengeCard({
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-rose-50 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border border-terracotta-50 overflow-hidden">
       <div className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
@@ -47,7 +48,7 @@ function ChallengeCard({
             </div>
           </div>
           {(challenge.photo_count ?? 0) > 0 && (
-            <Badge className="bg-rose-100 text-rose-500 border-0 flex-shrink-0">
+            <Badge className="bg-terracotta-100 text-terracotta-500 border-0 flex-shrink-0">
               {challenge.photo_count} foto{(challenge.photo_count ?? 0) !== 1 ? 's' : ''}
             </Badge>
           )}
@@ -56,7 +57,7 @@ function ChallengeCard({
         <div className="flex gap-2">
           <button
             onClick={() => onUpload(challenge)}
-            className="flex items-center gap-1.5 bg-rose-400 hover:bg-rose-500 text-white text-sm px-3 py-1.5 rounded-full transition-colors font-medium"
+            className="flex items-center gap-1.5 bg-terracotta-400 hover:bg-terracotta-500 text-white text-sm px-3 py-1.5 rounded-full transition-colors font-medium"
           >
             <Camera className="w-3.5 h-3.5" />
             Cumplir reto
@@ -75,7 +76,7 @@ function ChallengeCard({
       </div>
 
       {expanded && (
-        <div className="border-t border-rose-50 p-3">
+        <div className="border-t border-terracotta-50 p-3">
           {loadingPhotos ? (
             <div className="grid grid-cols-3 gap-1.5">
               {[...Array(3)].map((_, i) => (
@@ -123,8 +124,9 @@ export default function RetosPage() {
   return (
     <div className="py-6 space-y-4">
       <div>
-        <h1 className="text-2xl font-bold text-stone-800">Retos</h1>
-        <p className="text-sm text-stone-500">Completá los retos fotográficos</p>
+        <h1 className="font-script text-3xl text-stone-800">Retos</h1>
+        <HandDrawnUnderline className="w-14 h-3 text-sage-400 -mt-1" />
+        <p className="text-sm text-stone-500 mt-1">Completá los retos fotográficos</p>
       </div>
 
       {loading ? (

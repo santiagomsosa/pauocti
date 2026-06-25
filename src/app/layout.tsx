@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Montserrat, MonteCarlo } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const geist = Geist({
-  variable: "--font-geist-sans",
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
+  subsets: ["latin"],
+});
+
+const monteCarlo = MonteCarlo({
+  variable: "--font-montecarlo",
+  weight: "400",
   subsets: ["latin"],
 });
 
@@ -19,8 +25,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${geist.variable} h-full antialiased`}>
-      <body className="min-h-full bg-rose-50">
+    <html lang="es" className={`${montserrat.variable} ${monteCarlo.variable} h-full antialiased`}>
+      <body className="min-h-full bg-terracotta-50">
         {children}
         <Toaster richColors position="top-center" />
       </body>

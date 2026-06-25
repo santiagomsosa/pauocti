@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { Images, Heart, Trophy, Music, LogOut } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { LeafSprig } from '@/components/decorations'
 
 const tabs = [
   { href: '/galeria', label: 'Galería', icon: Images },
@@ -30,15 +31,16 @@ export function Navbar({ guestName }: NavbarProps) {
   return (
     <>
       {/* Header top */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-b border-rose-100 px-4 py-3 flex items-center justify-between">
-        <Link href="/galeria" className="text-lg font-bold text-stone-800 tracking-tight">
-          {process.env.NEXT_PUBLIC_COUPLE_NAMES ?? 'Boda'} 💕
+      <header className="fixed top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-b border-terracotta-100 px-4 py-3 flex items-center justify-between">
+        <Link href="/galeria" className="flex items-center gap-1.5 font-script text-2xl text-stone-800">
+          {process.env.NEXT_PUBLIC_COUPLE_NAMES ?? 'Boda'}
+          <LeafSprig className="w-4 h-5 text-sage-400 -rotate-12" />
         </Link>
         <div className="flex items-center gap-3">
           <span className="text-sm text-stone-500 hidden sm:block">{guestName}</span>
           <button
             onClick={handleLogout}
-            className="text-stone-400 hover:text-rose-400 transition-colors"
+            className="text-stone-400 hover:text-terracotta-400 transition-colors"
             aria-label="Salir"
           >
             <LogOut className="w-4 h-4" />
@@ -47,7 +49,7 @@ export function Navbar({ guestName }: NavbarProps) {
       </header>
 
       {/* Bottom navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-rose-100 flex safe-area-pb">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-terracotta-100 flex safe-area-pb">
         {tabs.map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href)
           return (
@@ -56,10 +58,10 @@ export function Navbar({ guestName }: NavbarProps) {
               href={href}
               className={cn(
                 'flex flex-1 flex-col items-center justify-center py-2 gap-0.5 transition-colors',
-                active ? 'text-rose-400' : 'text-stone-400 hover:text-stone-600'
+                active ? 'text-terracotta-400' : 'text-stone-400 hover:text-stone-600'
               )}
             >
-              <Icon className={cn('w-5 h-5', active && 'fill-rose-100')} />
+              <Icon className={cn('w-5 h-5', active && 'fill-terracotta-100')} />
               <span className="text-[10px] font-medium">{label}</span>
             </Link>
           )

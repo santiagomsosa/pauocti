@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { Heart, Loader2, Send } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
+import { HandDrawnUnderline } from '@/components/decorations'
 import type { Message } from '@/types'
 
 function formatDate(iso: string) {
@@ -56,27 +57,28 @@ export default function MuroPage() {
   return (
     <div className="py-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-stone-800">Muro</h1>
-        <p className="text-sm text-stone-500">Dejá tus buenos deseos para los novios</p>
+        <h1 className="font-script text-3xl text-stone-800">Muro</h1>
+        <HandDrawnUnderline className="w-14 h-3 text-sage-400 -mt-1" />
+        <p className="text-sm text-stone-500 mt-1">Dejá tus buenos deseos para los novios</p>
       </div>
 
       {/* Formulario */}
       <form onSubmit={handleSend} className="space-y-3">
         <Textarea
-          placeholder="Escribí tu mensaje para los novios... 💕"
+          placeholder="Escribí tu mensaje para los novios..."
           value={content}
           onChange={(e) => setContent(e.target.value)}
           disabled={sending}
           maxLength={500}
           rows={3}
-          className="resize-none border-rose-100 focus-visible:ring-rose-300"
+          className="resize-none border-terracotta-100 focus-visible:ring-terracotta-300"
         />
         <div className="flex items-center justify-between">
           <span className="text-xs text-stone-400">{content.length}/500</span>
           <Button
             type="submit"
             disabled={sending || !content.trim()}
-            className="bg-rose-400 hover:bg-rose-500 text-white"
+            className="bg-terracotta-400 hover:bg-terracotta-500 text-white"
           >
             {sending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -109,9 +111,9 @@ export default function MuroPage() {
       ) : (
         <div className="space-y-3">
           {messages.map((msg) => (
-            <div key={msg.id} className="bg-white rounded-xl p-4 shadow-sm border border-rose-50">
+            <div key={msg.id} className="bg-white rounded-xl p-4 shadow-sm border border-terracotta-50">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center flex-shrink-0 text-sm font-bold text-rose-400">
+                <div className="w-8 h-8 rounded-full bg-terracotta-100 flex items-center justify-center flex-shrink-0 text-sm font-bold text-terracotta-400">
                   {msg.guest_name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">

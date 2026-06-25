@@ -86,7 +86,7 @@ export function PhotoUploadModal({ open, onClose, onUploaded, challenge, challen
           {/* Área de selección de imagen */}
           <div
             onClick={() => inputRef.current?.click()}
-            className="relative border-2 border-dashed border-rose-200 rounded-xl overflow-hidden cursor-pointer hover:border-rose-300 transition-colors bg-rose-50 aspect-square flex items-center justify-center"
+            className="relative border-2 border-dashed border-terracotta-200 rounded-xl overflow-hidden cursor-pointer hover:border-terracotta-300 transition-colors bg-terracotta-50 aspect-square flex items-center justify-center"
           >
             {preview ? (
               <>
@@ -97,14 +97,14 @@ export function PhotoUploadModal({ open, onClose, onUploaded, challenge, challen
                     setPreview(null)
                     setFile(null)
                   }}
-                  className="absolute top-2 right-2 bg-white/80 rounded-full p-1 text-stone-600 hover:text-rose-400"
+                  className="absolute top-2 right-2 bg-white/80 rounded-full p-1 text-stone-600 hover:text-terracotta-400"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </>
             ) : (
               <div className="text-center space-y-2 p-6">
-                <ImageIcon className="w-10 h-10 text-rose-300 mx-auto" />
+                <ImageIcon className="w-10 h-10 text-terracotta-300 mx-auto" />
                 <p className="text-sm text-stone-500">Tocá para elegir una foto</p>
                 <p className="text-xs text-stone-400">JPG, PNG, HEIC · Máx. 10MB</p>
               </div>
@@ -127,8 +127,8 @@ export function PhotoUploadModal({ open, onClose, onUploaded, challenge, challen
                   onClick={() => setSelectedChallengeId(null)}
                   className={`text-xs px-3 py-1 rounded-full border transition-colors ${
                     !selectedChallengeId
-                      ? 'bg-rose-400 text-white border-rose-400'
-                      : 'border-stone-200 text-stone-500 hover:border-rose-200'
+                      ? 'bg-terracotta-400 text-white border-terracotta-400'
+                      : 'border-stone-200 text-stone-500 hover:border-terracotta-200'
                   }`}
                 >
                   Sin reto
@@ -139,8 +139,8 @@ export function PhotoUploadModal({ open, onClose, onUploaded, challenge, challen
                     onClick={() => setSelectedChallengeId(c.id)}
                     className={`text-xs px-3 py-1 rounded-full border transition-colors ${
                       selectedChallengeId === c.id
-                        ? 'bg-rose-400 text-white border-rose-400'
-                        : 'border-stone-200 text-stone-500 hover:border-rose-200'
+                        ? 'bg-terracotta-400 text-white border-terracotta-400'
+                        : 'border-stone-200 text-stone-500 hover:border-terracotta-200'
                     }`}
                   >
                     {c.emoji} {c.title}
@@ -153,7 +153,7 @@ export function PhotoUploadModal({ open, onClose, onUploaded, challenge, challen
           <Button
             onClick={handleUpload}
             disabled={!file || loading}
-            className="w-full bg-rose-400 hover:bg-rose-500 text-white"
+            className="w-full bg-terracotta-400 hover:bg-terracotta-500 text-white"
           >
             {loading ? (
               <>

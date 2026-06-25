@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Heart, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
+import { WatercolorBranch, GoldDots } from '@/components/decorations'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -38,15 +39,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-100 via-pink-50 to-amber-50 px-4">
-      <div className="w-full max-w-sm space-y-6">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-terracotta-100 via-cream-100 to-sage-50 px-4">
+      <WatercolorBranch className="absolute -top-6 -left-10 w-48 h-48 pointer-events-none" />
+      <WatercolorBranch className="absolute -bottom-10 -right-12 w-56 h-56 rotate-180 pointer-events-none" />
+      <GoldDots className="absolute top-10 right-6 w-24 h-14 pointer-events-none" />
+
+      <div className="relative w-full max-w-sm space-y-6">
         <div className="text-center space-y-2">
-          <div className="flex justify-center">
-            <div className="bg-white rounded-full p-3 shadow-sm">
-              <Heart className="w-8 h-8 text-rose-400 fill-rose-200" />
-            </div>
-          </div>
-          <h1 className="text-4xl font-bold tracking-tight text-stone-800">{coupleNames}</h1>
+          <h1 className="font-script text-5xl text-stone-800">{coupleNames}</h1>
           {weddingDate && <p className="text-stone-500 text-sm">{weddingDate}</p>}
         </div>
 
@@ -68,7 +68,7 @@ export default function LoginPage() {
                 onChange={(e) => setName(e.target.value)}
                 disabled={loading}
                 autoComplete="name"
-                className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100 disabled:opacity-50"
+                className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-terracotta-300 focus:ring-2 focus:ring-terracotta-100 disabled:opacity-50"
               />
             </div>
 
@@ -84,14 +84,14 @@ export default function LoginPage() {
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
                 disabled={loading}
                 autoComplete="off"
-                className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm font-mono tracking-widest outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100 disabled:opacity-50"
+                className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm font-mono tracking-widest outline-none focus:border-terracotta-300 focus:ring-2 focus:ring-terracotta-100 disabled:opacity-50"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-rose-400 py-2.5 text-sm font-medium text-white transition hover:bg-rose-500 disabled:opacity-50"
+              className="w-full rounded-lg bg-terracotta-400 py-2.5 text-sm font-medium text-white transition hover:bg-terracotta-500 disabled:opacity-50"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">

@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Navbar } from '@/components/Navbar'
+import { WatercolorBranch, GoldDots } from '@/components/decorations'
 import type { GuestSession } from '@/types'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -21,10 +22,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-cream-50">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <WatercolorBranch className="absolute -top-8 -left-12 w-56 h-56 opacity-90" />
+        <WatercolorBranch className="absolute -bottom-12 -right-10 w-64 h-64 rotate-180 opacity-90" />
+        <GoldDots className="absolute top-24 right-4 w-24 h-14 opacity-90" />
+        <GoldDots className="absolute bottom-28 left-6 w-24 h-14 rotate-180 opacity-90" />
+      </div>
       <Navbar guestName={session.guestName} />
       {/* pt para el header, pb para el bottom nav */}
-      <main className="flex-1 pt-16 pb-20 px-4 max-w-2xl mx-auto w-full">
+      <main className="relative flex-1 pt-16 pb-20 px-4 max-w-2xl mx-auto w-full">
         {children}
       </main>
     </div>

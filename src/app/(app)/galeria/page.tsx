@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { Plus, Camera } from 'lucide-react'
 import { PhotoUploadModal } from '@/components/PhotoUploadModal'
 import { Badge } from '@/components/ui/badge'
+import { HandDrawnUnderline } from '@/components/decorations'
 import type { Photo, Challenge } from '@/types'
 
 export default function GaleriaPage() {
@@ -42,12 +43,13 @@ export default function GaleriaPage() {
     <div className="py-6 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-stone-800">Galería</h1>
-          <p className="text-sm text-stone-500">{photos.length} fotos compartidas</p>
+          <h1 className="font-script text-3xl text-stone-800">Galería</h1>
+          <HandDrawnUnderline className="w-14 h-3 text-sage-400 -mt-1" />
+          <p className="text-sm text-stone-500 mt-1">{photos.length} fotos compartidas</p>
         </div>
         <button
           onClick={() => setUploadOpen(true)}
-          className="flex items-center gap-2 bg-rose-400 hover:bg-rose-500 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors shadow-sm"
+          className="flex items-center gap-2 bg-terracotta-400 hover:bg-terracotta-500 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors shadow-sm"
         >
           <Plus className="w-4 h-4" />
           Subir
@@ -66,7 +68,7 @@ export default function GaleriaPage() {
           <p className="text-stone-500">¡Sé el primero en subir una foto!</p>
           <button
             onClick={() => setUploadOpen(true)}
-            className="text-rose-400 font-medium text-sm"
+            className="text-terracotta-400 font-medium text-sm"
           >
             Subir ahora
           </button>
@@ -86,7 +88,7 @@ export default function GaleriaPage() {
                 <div className="absolute bottom-0 left-0 right-0 p-2 space-y-1">
                   <p className="text-white text-xs font-medium truncate">{photo.guest_name}</p>
                   {photo.challenge && (
-                    <Badge className="bg-rose-400/90 text-white text-[10px] px-1.5 py-0 h-auto">
+                    <Badge className="bg-terracotta-400/90 text-white text-[10px] px-1.5 py-0 h-auto">
                       {photo.challenge.emoji} {photo.challenge.title}
                     </Badge>
                   )}

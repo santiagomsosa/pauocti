@@ -6,6 +6,7 @@ import { Music, Loader2, Send } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { HandDrawnUnderline } from '@/components/decorations'
 import type { MusicRequest } from '@/types'
 
 function formatDate(iso: string) {
@@ -59,12 +60,13 @@ export default function MusicaPage() {
   return (
     <div className="py-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-stone-800">Pedidos de música</h1>
-        <p className="text-sm text-stone-500">Pedile una canción al DJ</p>
+        <h1 className="font-script text-3xl text-stone-800">Pedidos de música</h1>
+        <HandDrawnUnderline className="w-14 h-3 text-sage-400 -mt-1" />
+        <p className="text-sm text-stone-500 mt-1">Pedile una canción al DJ</p>
       </div>
 
       {/* Formulario */}
-      <form onSubmit={handleSend} className="bg-white rounded-xl p-4 shadow-sm border border-rose-50 space-y-3">
+      <form onSubmit={handleSend} className="bg-white rounded-xl p-4 shadow-sm border border-terracotta-50 space-y-3">
         <div className="space-y-1.5">
           <Label htmlFor="song">Canción *</Label>
           <Input
@@ -73,7 +75,7 @@ export default function MusicaPage() {
             value={songName}
             onChange={(e) => setSongName(e.target.value)}
             disabled={sending}
-            className="border-stone-200 focus-visible:ring-rose-300"
+            className="border-stone-200 focus-visible:ring-terracotta-300"
           />
         </div>
         <div className="space-y-1.5">
@@ -84,13 +86,13 @@ export default function MusicaPage() {
             value={artist}
             onChange={(e) => setArtist(e.target.value)}
             disabled={sending}
-            className="border-stone-200 focus-visible:ring-rose-300"
+            className="border-stone-200 focus-visible:ring-terracotta-300"
           />
         </div>
         <Button
           type="submit"
           disabled={sending || !songName.trim()}
-          className="w-full bg-rose-400 hover:bg-rose-500 text-white"
+          className="w-full bg-terracotta-400 hover:bg-terracotta-500 text-white"
         >
           {sending ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -125,10 +127,10 @@ export default function MusicaPage() {
             {requests.map((req) => (
               <div
                 key={req.id}
-                className="bg-white rounded-xl p-3 shadow-sm border border-rose-50 flex items-center gap-3"
+                className="bg-white rounded-xl p-3 shadow-sm border border-terracotta-50 flex items-center gap-3"
               >
-                <div className="w-9 h-9 rounded-full bg-rose-100 flex items-center justify-center flex-shrink-0">
-                  <Music className="w-4 h-4 text-rose-400" />
+                <div className="w-9 h-9 rounded-full bg-terracotta-100 flex items-center justify-center flex-shrink-0">
+                  <Music className="w-4 h-4 text-terracotta-400" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-stone-800 text-sm truncate">{req.song_name}</p>
