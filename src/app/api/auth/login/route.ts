@@ -4,14 +4,13 @@ import { encodeSession, SESSION_COOKIE } from '@/lib/auth'
 import { z } from 'zod'
 
 const schema = z.object({
-  name: z.string().min(1, 'El nombre es requerido').max(100).trim(),
   code: z.string().min(1, 'El código es requerido').max(50).trim(),
 })
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, code } = schema.parse(body)
+    const { code } = schema.parse(body)
 
     const supabase = createServerClient()
     const { data: guest, error } = await supabase
@@ -28,7 +27,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Tu acceso todavía no está habilitado.' }, { status: 403 })
     }
 
-    const session = encodeSession({ guestId: guest.id, guestName: name })
+    const session = encodeSession({ guestId: guest.id, guestName: guest.name })
 
     const response = NextResponse.json({ success: true })
     response.cookies.set(SESSION_COOKIE, session, {

@@ -8,7 +8,6 @@ import { WatercolorBranch, GoldDots } from '@/components/decorations'
 
 export default function LoginPage() {
   const router = useRouter()
-  const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -17,7 +16,6 @@ export default function LoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim()) { toast.error('Ingresá tu nombre'); return }
     if (!code.trim()) { toast.error('Ingresá el código'); return }
 
     setLoading(true)
@@ -25,7 +23,7 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), code: code.trim() }),
+        body: JSON.stringify({ code: code.trim() }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -52,26 +50,10 @@ export default function LoginPage() {
 
         <div className="bg-white rounded-2xl shadow-md p-6 space-y-4">
           <p className="text-center text-stone-500 text-sm">
-            Ingresá tu nombre y el código de tu invitación
+            Ingresá el código de tu invitación
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <label htmlFor="name" className="text-sm font-medium text-stone-700">
-                Tu nombre
-              </label>
-              <input
-                id="name"
-                type="text"
-                placeholder="Ej: María García"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={loading}
-                autoComplete="name"
-                className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-terracotta-300 focus:ring-2 focus:ring-terracotta-100 disabled:opacity-50"
-              />
-            </div>
-
             <div className="space-y-1.5">
               <label htmlFor="code" className="text-sm font-medium text-stone-700">
                 Código de invitación
@@ -84,7 +66,8 @@ export default function LoginPage() {
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
                 disabled={loading}
                 autoComplete="off"
-                className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm font-mono tracking-widest outline-none focus:border-terracotta-300 focus:ring-2 focus:ring-terracotta-100 disabled:opacity-50"
+                autoFocus
+                className="w-full rounded-lg border border-stone-200 px-3 py-2 text-center text-base font-mono tracking-[0.3em] outline-none focus:border-terracotta-300 focus:ring-2 focus:ring-terracotta-100 disabled:opacity-50"
               />
             </div>
 

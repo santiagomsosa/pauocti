@@ -89,6 +89,52 @@ export function HandDrawnUnderline({ className }: { className?: string }) {
   )
 }
 
+export function ChurchIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
+      <g
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M32 4 L32 16" />
+        <path d="M27 9 L37 9" />
+        <path d="M22 30 L32 17 L42 30" />
+        <path d="M22 30 L22 56" />
+        <path d="M42 30 L42 56" />
+        <path d="M28 56 L28 45 Q32 41 36 45 L36 56" />
+        <path d="M14 56 L50 56" />
+        <path d="M14 56 L14 40 L22 34" />
+        <path d="M50 56 L50 40 L42 34" />
+      </g>
+    </svg>
+  )
+}
+
+export function PartyIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
+      <g
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M16 14 L24 30 L27 16 Z" />
+        <path d="M24 30 L26 45" />
+        <path d="M20 46 L31 43" />
+        <path d="M48 14 L40 30 L37 16 Z" />
+        <path d="M40 30 L38 45" />
+        <path d="M44 46 L33 43" />
+        <path d="M32 6 L32 10" />
+        <path d="M27 8 L29 11" />
+        <path d="M37 8 L35 11" />
+      </g>
+    </svg>
+  )
+}
+
 export function LeafSprig({ className }: { className?: string }) {
   return (
     <svg

@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { motion } from 'motion/react'
 import type { Guest } from '@/types'
 
@@ -13,14 +12,14 @@ export function FrozenInvitation({ guest }: { guest: Guest }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
-      className="bg-white rounded-2xl shadow-md p-6 space-y-4 text-center"
+      className="text-center space-y-4"
     >
       <p className="text-sm text-stone-500">Ya confirmaste tu asistencia</p>
-      <p className="font-script text-3xl text-stone-800">
+      <p className="font-script text-4xl text-stone-800">
         {attending ? '¡Nos vemos en la boda!' : 'Gracias por avisarnos'}
       </p>
 
-      <div className="text-left bg-cream-50 rounded-xl p-4 space-y-1.5 text-sm text-stone-600">
+      <div className="text-left mx-auto max-w-xs space-y-1.5 text-sm text-stone-600">
         <p>
           <span className="font-medium text-stone-700">Asistencia:</span> {attending ? 'Confirmada' : 'No asistirá'}
         </p>
@@ -37,18 +36,6 @@ export function FrozenInvitation({ guest }: { guest: Guest }) {
           </p>
         )}
       </div>
-
-      <div className="border-t border-stone-100 pt-4 space-y-2">
-        <p className="text-xs text-stone-400">Tu código de acceso a la app</p>
-        <p className="font-mono text-lg tracking-widest text-terracotta-500">{guest.code}</p>
-      </div>
-
-      <Link
-        href="/"
-        className="inline-flex items-center justify-center w-full rounded-lg bg-terracotta-400 py-2.5 text-sm font-medium text-white transition hover:bg-terracotta-500"
-      >
-        Entrar a la app
-      </Link>
     </motion.div>
   )
 }
