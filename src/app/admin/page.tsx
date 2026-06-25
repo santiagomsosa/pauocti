@@ -11,17 +11,27 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
-import { Trash2, Plus, LogOut, Loader2, Users, Trophy, Images, Heart, Music } from 'lucide-react'
-import type { Guest, Challenge, Photo, Message, MusicRequest } from '@/types'
+import { Trash2, Plus, LogOut, Loader2, Users, Trophy, Images, Heart, Music, Settings as SettingsIcon } from 'lucide-react'
+import { GuestsTab } from '@/components/admin/GuestsTab'
+import { SettingsTab } from '@/components/admin/SettingsTab'
+import type { Guest, Challenge, Photo, Message, MusicRequest, Settings } from '@/types'
+
+const EMPTY_SETTINGS: Settings = {
+  wedding_datetime: null,
+  couple_names: null,
+  venue: null,
+  venue_address: null,
+  venue_map_url: null,
+}
 
 export default function AdminPage() {
   const router = useRouter()
 
   // Guests
   const [guests, setGuests] = useState<Guest[]>([])
-  const [newGuestName, setNewGuestName] = useState('')
-  const [newGuestCode, setNewGuestCode] = useState('')
-  const [addingGuest, setAddingGuest] = useState(false)
+
+  // Settings
+  const [settings, setSettings] = useState<Settings>(EMPTY_SETTINGS)
 
   // Challenges
   const [challenges, setChallenges] = useState<Challenge[]>([])
@@ -39,14 +49,16 @@ export default function AdminPage() {
 
   const loadAll = useCallback(async () => {
     setLoading(true)
-    const [g, c, p, m, r] = await Promise.all([
+    const [g, s, c, p, m, r] = await Promise.all([
       fetch('/api/admin/guests').then((r) => r.json()),
+      fetch('/api/admin/settings').then((r) => r.json()),
       fetch('/api/admin/challenges').then((r) => r.json()),
       fetch('/api/photos').then((r) => r.json()),
       fetch('/api/messages').then((r) => r.json()),
       fetch('/api/music').then((r) => r.json()),
     ])
     setGuests(g.guests ?? [])
+    setSettings(s.settings ?? EMPTY_SETTINGS)
     setChallenges(c.challenges ?? [])
     setPhotos(p.photos ?? [])
     setMessages(m.messages ?? [])
@@ -61,36 +73,6 @@ export default function AdminPage() {
   async function handleLogout() {
     await fetch('/api/admin/logout', { method: 'POST' })
     router.push('/admin/login')
-  }
-
-  async function addGuest(e: React.FormEvent) {
-    e.preventDefault()
-    if (!newGuestName.trim() || !newGuestCode.trim()) return
-    setAddingGuest(true)
-    const res = await fetch('/api/admin/guests', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newGuestName.trim(), code: newGuestCode.trim() }),
-    })
-    const data = await res.json()
-    if (res.ok) {
-      setGuests((prev) => [...prev, data.guest].sort((a, b) => a.name.localeCompare(b.name)))
-      setNewGuestName('')
-      setNewGuestCode('')
-      toast.success('Invitado agregado')
-    } else {
-      toast.error(data.error)
-    }
-    setAddingGuest(false)
-  }
-
-  async function deleteGuest(id: string) {
-    if (!confirm('¿Eliminar este invitado?')) return
-    const res = await fetch(`/api/admin/guests?id=${id}`, { method: 'DELETE' })
-    if (res.ok) {
-      setGuests((prev) => prev.filter((g) => g.id !== id))
-      toast.success('Invitado eliminado')
-    }
   }
 
   async function addChallenge(e: React.FormEvent) {
@@ -143,7 +125,7 @@ export default function AdminPage() {
           </div>
         ) : (
           <Tabs defaultValue="guests">
-            <TabsList className="grid grid-cols-5 mb-6 w-full">
+            <TabsList className="grid grid-cols-6 mb-6 w-full">
               <TabsTrigger value="guests" className="gap-1">
                 <Users className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Invitados</span>
@@ -168,55 +150,20 @@ export default function AdminPage() {
                 <span className="hidden sm:inline">Música</span>
                 <Badge className="text-[10px] px-1 py-0 h-4 ml-1">{musicRequests.length}</Badge>
               </TabsTrigger>
+              <TabsTrigger value="settings" className="gap-1">
+                <SettingsIcon className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Config</span>
+              </TabsTrigger>
             </TabsList>
 
             {/* Invitados */}
-            <TabsContent value="guests" className="space-y-4">
-              <form onSubmit={addGuest} className="bg-white rounded-xl p-4 shadow-sm space-y-3">
-                <h2 className="font-semibold text-stone-700">Agregar invitado</h2>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label>Nombre</Label>
-                    <Input
-                      placeholder="Ej: María García"
-                      value={newGuestName}
-                      onChange={(e) => setNewGuestName(e.target.value)}
-                      disabled={addingGuest}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>Código</Label>
-                    <Input
-                      placeholder="Ej: MG001"
-                      value={newGuestCode}
-                      onChange={(e) => setNewGuestCode(e.target.value.toUpperCase())}
-                      disabled={addingGuest}
-                      className="font-mono"
-                    />
-                  </div>
-                </div>
-                <Button type="submit" disabled={addingGuest || !newGuestName.trim() || !newGuestCode.trim()} size="sm">
-                  {addingGuest ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4 mr-1" />Agregar</>}
-                </Button>
-              </form>
+            <TabsContent value="guests">
+              <GuestsTab guests={guests} setGuests={setGuests} />
+            </TabsContent>
 
-              <div className="bg-white rounded-xl shadow-sm divide-y">
-                {guests.length === 0 ? (
-                  <p className="p-4 text-sm text-stone-400 text-center">No hay invitados aún</p>
-                ) : (
-                  guests.map((g) => (
-                    <div key={g.id} className="flex items-center justify-between px-4 py-3">
-                      <div>
-                        <p className="font-medium text-stone-800 text-sm">{g.name}</p>
-                        <p className="text-xs text-stone-400 font-mono">{g.code}</p>
-                      </div>
-                      <button onClick={() => deleteGuest(g.id)} className="text-stone-300 hover:text-red-400 transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
+            {/* Configuración */}
+            <TabsContent value="settings">
+              <SettingsTab settings={settings} setSettings={setSettings} />
             </TabsContent>
 
             {/* Retos */}

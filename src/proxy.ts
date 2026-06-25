@@ -6,6 +6,11 @@ const ADMIN_LOGIN = '/admin/login'
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // Invitación online pública (se accede por token, sin login)
+  if (pathname.startsWith('/invitacion/') || pathname.startsWith('/api/invitation/')) {
+    return NextResponse.next()
+  }
+
   // Admin routes (excepto /admin/login y /api/admin/login)
   if (pathname.startsWith('/admin') && pathname !== ADMIN_LOGIN) {
     const adminSession = request.cookies.get('admin_session')
