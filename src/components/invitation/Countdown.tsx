@@ -15,10 +15,11 @@ function getRemaining(target: number) {
 
 export function Countdown({ weddingDatetime }: { weddingDatetime: string | null }) {
   const target = weddingDatetime ? new Date(weddingDatetime).getTime() : null
-  const [remaining, setRemaining] = useState(() => (target ? getRemaining(target) : null))
+  const [remaining, setRemaining] = useState<ReturnType<typeof getRemaining> | null>(null)
 
   useEffect(() => {
     if (!target) return
+    setRemaining(getRemaining(target))
     const id = setInterval(() => setRemaining(getRemaining(target)), 1000)
     return () => clearInterval(id)
   }, [target])
@@ -33,23 +34,29 @@ export function Countdown({ weddingDatetime }: { weddingDatetime: string | null 
   ]
 
   return (
-    <div className="flex justify-center divide-x divide-terracotta-200/60">
-      {units.map((u) => (
-        <div key={u.label} className="flex flex-col items-center px-3">
-          <div className="flex h-11 w-16 items-center justify-center">
-            <motion.span
-              key={u.value}
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25 }}
-              className="font-script text-4xl leading-none text-terracotta-500 tabular-nums"
-            >
-              {String(u.value).padStart(2, '0')}
-            </motion.span>
+    <div className="space-y-2 text-center">
+      <p className="font-title text-xs uppercase tracking-[0.3em] text-sage-500">Faltan</p>
+      <div className="flex items-center justify-center">
+        {units.map((u, i) => (
+          <div key={u.label} className="flex items-center">
+            {i > 0 && <span className="mx-1.5 mb-4 w-1.5 h-1.5 rounded-full bg-rose-300" />}
+            <div className="flex flex-col items-center px-1.5">
+              <div className="flex h-11 w-14 items-center justify-center">
+                <motion.span
+                  key={u.value}
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="font-invite text-4xl font-medium leading-none text-ink-500 tabular-nums"
+                >
+                  {String(u.value).padStart(2, '0')}
+                </motion.span>
+              </div>
+              <span className="font-title text-[11px] uppercase tracking-widest text-stone-400">{u.label}</span>
+            </div>
           </div>
-          <span className="text-[11px] uppercase tracking-widest text-stone-400">{u.label}</span>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   )
 }

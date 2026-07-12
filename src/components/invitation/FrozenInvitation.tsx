@@ -1,10 +1,27 @@
 'use client'
 
 import { motion } from 'motion/react'
+import { Phone, Utensils } from 'lucide-react'
 import type { Guest } from '@/types'
+
+interface Attendee {
+  name: string
+  phone: string | null
+  dietary: string | null
+}
 
 export function FrozenInvitation({ guest }: { guest: Guest }) {
   const attending = guest.rsvp_status === 'attending'
+
+  const attendees: Attendee[] = []
+  if (attending) {
+    attendees.push({ name: guest.name, phone: guest.phone, dietary: guest.dietary_restrictions })
+  }
+  for (const p of guest.plus_ones ?? []) {
+    if (p.rsvp_status === 'attending') {
+      attendees.push({ name: p.name, phone: p.phone, dietary: p.dietary_restrictions })
+    }
+  }
 
   return (
     <motion.div
@@ -12,30 +29,44 @@ export function FrozenInvitation({ guest }: { guest: Guest }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
-      className="text-center space-y-4"
+      className="max-w-md mx-auto text-center space-y-4"
     >
-      <p className="text-sm text-stone-500">Ya confirmaste tu asistencia</p>
-      <p className="font-script text-4xl text-stone-800">
+      <p className="font-title text-xs uppercase tracking-[0.25em] text-ink-500">
+        {attending ? 'Asistencia confirmada' : 'Respuesta registrada'}
+      </p>
+      <p className="font-script text-4xl text-ink-600">
         {attending ? '¡Nos vemos en la boda!' : 'Gracias por avisarnos'}
       </p>
 
-      <div className="text-left mx-auto max-w-xs space-y-1.5 text-sm text-stone-600">
-        <p>
-          <span className="font-medium text-stone-700">Asistencia:</span> {attending ? 'Confirmada' : 'No asistirá'}
-        </p>
-        {guest.dietary_restrictions && (
-          <p>
-            <span className="font-medium text-stone-700">Restricción alimentaria:</span>{' '}
-            {guest.dietary_restrictions}
-          </p>
-        )}
-        {guest.plus_ones && guest.plus_ones.length > 0 && (
-          <p>
-            <span className="font-medium text-stone-700">Acompañantes:</span>{' '}
-            {guest.plus_ones.map((p) => p.name).join(', ')}
-          </p>
-        )}
-      </div>
+      {attendees.length > 0 && (
+        <div className="mx-auto max-w-xs space-y-2 text-left">
+          {attendees.map((a, i) => (
+            <div
+              key={i}
+              className="flex items-start gap-3 rounded-xl border border-ink-100 bg-white/50 px-3 py-2.5"
+            >
+              <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-rose-200 text-xs font-semibold text-rose-600">
+                {i + 1}
+              </span>
+              <div className="min-w-0 space-y-0.5">
+                <p className="text-sm font-medium text-ink-600 truncate">{a.name}</p>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-stone-500">
+                  {a.phone && (
+                    <span className="flex items-center gap-1">
+                      <Phone className="w-3 h-3" />
+                      {a.phone}
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1">
+                    <Utensils className="w-3 h-3" />
+                    {a.dietary || 'Sin restricciones'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </motion.div>
   )
 }

@@ -71,14 +71,14 @@ export default function MuroPage() {
           disabled={sending}
           maxLength={500}
           rows={3}
-          className="resize-none border-terracotta-100 focus-visible:ring-terracotta-300"
+          className="resize-none border-cream-200 focus-visible:ring-ink-300"
         />
         <div className="flex items-center justify-between">
           <span className="text-xs text-stone-400">{content.length}/500</span>
           <Button
             type="submit"
             disabled={sending || !content.trim()}
-            className="bg-terracotta-400 hover:bg-terracotta-500 text-white"
+            className="bg-ink-500 hover:bg-ink-600 text-white"
           >
             {sending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -111,9 +111,9 @@ export default function MuroPage() {
       ) : (
         <div className="space-y-3">
           {messages.map((msg) => (
-            <div key={msg.id} className="bg-white rounded-xl p-4 shadow-sm border border-terracotta-50">
+            <div key={msg.id} className="bg-white rounded-xl p-4 shadow-sm border border-cream-200">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-terracotta-100 flex items-center justify-center flex-shrink-0 text-sm font-bold text-terracotta-400">
+                <div className="w-8 h-8 rounded-full bg-ink-100 flex items-center justify-center flex-shrink-0 text-sm font-bold text-ink-500">
                   {msg.guest_name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">

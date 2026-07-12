@@ -12,14 +12,15 @@ interface RsvpFormProps {
 }
 
 const inputClass =
-  'w-full rounded-lg border border-stone-300/70 bg-white/40 px-3 py-2 text-sm outline-none backdrop-blur-sm focus:border-terracotta-300 focus:ring-2 focus:ring-terracotta-100 disabled:opacity-50'
+  'w-full rounded-lg border border-stone-300/70 bg-white/40 px-3 py-2 text-sm outline-none backdrop-blur-sm focus:border-ink-300 focus:ring-2 focus:ring-ink-100 disabled:opacity-50'
 
 function emptyPlusOne(): PlusOneInput {
-  return { name: '', email: '', rsvp_status: 'attending', dietary_restrictions: '' }
+  return { name: '', email: '', phone: '', rsvp_status: 'attending', dietary_restrictions: '' }
 }
 
 export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
   const [attending, setAttending] = useState<'attending' | 'declined' | null>(null)
+  const [phone, setPhone] = useState('')
   const [dietary, setDietary] = useState('')
   const [plusOnes, setPlusOnes] = useState<PlusOneInput[]>([])
   const [loading, setLoading] = useState(false)
@@ -55,6 +56,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           rsvp_status: attending,
+          phone,
           dietary_restrictions: dietary,
           plus_ones: plusOnes,
         }),
@@ -78,10 +80,10 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       onSubmit={handleSubmit}
-      className="rounded-3xl border border-terracotta-200/70 bg-terracotta-100/40 p-6 space-y-5 shadow-sm"
+      className="max-w-md mx-auto rounded-3xl border border-ink-200/70 bg-ink-50/60 p-6 space-y-5 shadow-sm"
     >
       <div className="space-y-2 text-center">
-        <p className="text-xs uppercase tracking-[0.25em] text-terracotta-500">Confirmá tu asistencia</p>
+        <p className="font-title text-xs uppercase tracking-[0.25em] text-ink-500">Confirmá tu asistencia</p>
         <p className="text-stone-700 leading-relaxed">
           {guest.name}, nos gustaría que nos acompañes en este día tan especial
         </p>
@@ -92,12 +94,12 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
             disabled={loading}
             animate={attending === null ? { scale: [1, 1.04, 1] } : { scale: 1 }}
             transition={attending === null ? { repeat: Infinity, duration: 1.6 } : { duration: 0.2 }}
-            className={`flex items-center justify-center gap-1.5 rounded-full py-3 text-sm font-semibold border-2 transition ${
+            className={`font-title flex items-center justify-center gap-1.5 rounded-full py-3 text-sm uppercase tracking-wide font-semibold border-2 transition ${
               attending === 'attending'
-                ? 'bg-terracotta-500 border-terracotta-500 text-white shadow-md'
+                ? 'bg-ink-600 border-ink-600 text-white shadow-md'
                 : attending === 'declined'
                   ? 'bg-transparent border-stone-300 text-stone-500'
-                  : 'bg-terracotta-400 border-terracotta-400 text-white shadow-md hover:bg-terracotta-500'
+                  : 'bg-ink-500 border-ink-500 text-white shadow-md hover:bg-ink-600'
             }`}
           >
             {attending === 'attending' && <Check className="w-4 h-4" />}
@@ -107,7 +109,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
             type="button"
             onClick={() => setAttending('declined')}
             disabled={loading}
-            className={`rounded-full py-3 text-sm font-semibold border-2 transition ${
+            className={`font-title rounded-full py-3 text-sm uppercase tracking-wide font-semibold border-2 transition ${
               attending === 'declined'
                 ? 'bg-stone-600 border-stone-600 text-white'
                 : 'bg-transparent border-stone-300 text-stone-500 hover:border-stone-400'
@@ -117,6 +119,20 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
           </button>
         </div>
       </div>
+
+      {attending === 'attending' && (
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-stone-700">Tu teléfono</label>
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            disabled={loading}
+            placeholder="Ej: 11 1234 5678"
+            className={inputClass}
+          />
+        </div>
+      )}
 
       {attending === 'attending' && (
         <div className="space-y-1.5">
@@ -143,7 +159,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
                 type="button"
                 onClick={addPlusOne}
                 disabled={loading}
-                className="flex items-center gap-1 text-xs font-medium text-terracotta-500 hover:text-terracotta-600"
+                className="flex items-center gap-1 text-xs font-medium text-ink-500 hover:text-ink-600"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Agregar
@@ -187,6 +203,14 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
                   disabled={loading}
                   className={inputClass}
                 />
+                <input
+                  type="tel"
+                  placeholder="Teléfono (opcional)"
+                  value={p.phone}
+                  onChange={(e) => updatePlusOne(i, { phone: e.target.value })}
+                  disabled={loading}
+                  className={inputClass}
+                />
                 <select
                   value={p.rsvp_status}
                   onChange={(e) => updatePlusOne(i, { rsvp_status: e.target.value as 'attending' | 'declined' })}
@@ -213,7 +237,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
       <button
         type="submit"
         disabled={loading || !attending}
-        className="w-full rounded-full bg-terracotta-400 py-2.5 text-sm font-medium text-white transition hover:bg-terracotta-500 disabled:opacity-50"
+        className="font-title w-full rounded-full bg-ink-500 py-2.5 text-sm uppercase tracking-wide text-white transition hover:bg-ink-600 disabled:opacity-50"
       >
         {loading ? (
           <span className="flex items-center justify-center gap-2">

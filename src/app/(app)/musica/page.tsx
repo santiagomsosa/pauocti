@@ -66,7 +66,7 @@ export default function MusicaPage() {
       </div>
 
       {/* Formulario */}
-      <form onSubmit={handleSend} className="bg-white rounded-xl p-4 shadow-sm border border-terracotta-50 space-y-3">
+      <form onSubmit={handleSend} className="bg-white rounded-xl p-4 shadow-sm border border-cream-200 space-y-3">
         <div className="space-y-1.5">
           <Label htmlFor="song">Canción *</Label>
           <Input
@@ -75,7 +75,7 @@ export default function MusicaPage() {
             value={songName}
             onChange={(e) => setSongName(e.target.value)}
             disabled={sending}
-            className="border-stone-200 focus-visible:ring-terracotta-300"
+            className="border-stone-200 focus-visible:ring-ink-300"
           />
         </div>
         <div className="space-y-1.5">
@@ -86,13 +86,13 @@ export default function MusicaPage() {
             value={artist}
             onChange={(e) => setArtist(e.target.value)}
             disabled={sending}
-            className="border-stone-200 focus-visible:ring-terracotta-300"
+            className="border-stone-200 focus-visible:ring-ink-300"
           />
         </div>
         <Button
           type="submit"
           disabled={sending || !songName.trim()}
-          className="w-full bg-terracotta-400 hover:bg-terracotta-500 text-white"
+          className="w-full bg-ink-500 hover:bg-ink-600 text-white"
         >
           {sending ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -127,10 +127,10 @@ export default function MusicaPage() {
             {requests.map((req) => (
               <div
                 key={req.id}
-                className="bg-white rounded-xl p-3 shadow-sm border border-terracotta-50 flex items-center gap-3"
+                className="bg-white rounded-xl p-3 shadow-sm border border-cream-200 flex items-center gap-3"
               >
-                <div className="w-9 h-9 rounded-full bg-terracotta-100 flex items-center justify-center flex-shrink-0">
-                  <Music className="w-4 h-4 text-terracotta-400" />
+                <div className="w-9 h-9 rounded-full bg-ink-100 flex items-center justify-center flex-shrink-0">
+                  <Music className="w-4 h-4 text-ink-500" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-stone-800 text-sm truncate">{req.song_name}</p>

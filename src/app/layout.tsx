@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Montserrat, Pinyon_Script } from "next/font/google";
+import { Montserrat, Cinzel, Lora } from "next/font/google";
+import localFont from "next/font/local";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -8,10 +9,22 @@ const montserrat = Montserrat({
   subsets: ["latin"],
 });
 
-const pinyonScript = Pinyon_Script({
-  variable: "--font-pinyon-script",
-  weight: "400",
+const cinzel = Cinzel({
+  variable: "--font-cinzel",
+  weight: ["400", "600"],
   subsets: ["latin"],
+});
+
+const lora = Lora({
+  variable: "--font-lora",
+  weight: ["400", "500", "600"],
+  subsets: ["latin"],
+});
+
+const brittanySignature = localFont({
+  src: "./fonts/BrittanySignature.ttf",
+  variable: "--font-brittany-signature",
+  weight: "400",
 });
 
 export const metadata: Metadata = {
@@ -25,8 +38,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${montserrat.variable} ${pinyonScript.variable} h-full antialiased`}>
-      <body className="min-h-full bg-terracotta-50">
+    <html
+      lang="es"
+      className={`${montserrat.variable} ${cinzel.variable} ${lora.variable} ${brittanySignature.variable} h-full antialiased`}
+    >
+      <body className="min-h-full bg-cream-50">
         {children}
         <Toaster richColors position="top-center" />
       </body>

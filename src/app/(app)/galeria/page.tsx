@@ -49,7 +49,7 @@ export default function GaleriaPage() {
         </div>
         <button
           onClick={() => setUploadOpen(true)}
-          className="flex items-center gap-2 bg-terracotta-400 hover:bg-terracotta-500 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors shadow-sm"
+          className="flex items-center gap-2 bg-ink-500 hover:bg-ink-600 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors shadow-sm"
         >
           <Plus className="w-4 h-4" />
           Subir
@@ -68,7 +68,7 @@ export default function GaleriaPage() {
           <p className="text-stone-500">¡Sé el primero en subir una foto!</p>
           <button
             onClick={() => setUploadOpen(true)}
-            className="text-terracotta-400 font-medium text-sm"
+            className="text-ink-500 font-medium text-sm"
           >
             Subir ahora
           </button>
@@ -88,7 +88,7 @@ export default function GaleriaPage() {
                 <div className="absolute bottom-0 left-0 right-0 p-2 space-y-1">
                   <p className="text-white text-xs font-medium truncate">{photo.guest_name}</p>
                   {photo.challenge && (
-                    <Badge className="bg-terracotta-400/90 text-white text-[10px] px-1.5 py-0 h-auto">
+                    <Badge className="bg-ink-500/90 text-white text-[10px] px-1.5 py-0 h-auto">
                       {photo.challenge.emoji} {photo.challenge.title}
                     </Badge>
                   )}

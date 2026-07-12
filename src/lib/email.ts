@@ -44,7 +44,7 @@ export async function sendInvitationEmail(guest: Guest, settings: Settings) {
         <p style="font-size: 15px; line-height: 1.6;">Hola ${guest.name},</p>
         <p style="font-size: 15px; line-height: 1.6;">Queremos compartir con vos uno de los días más importantes de nuestras vidas. Ingresá a tu invitación online para ver todos los detalles y confirmar tu asistencia.</p>
         <div style="text-align: center; margin: 28px 0;">
-          <a href="${url}" style="background: #c97b5e; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px;">Ver mi invitación</a>
+          <a href="${url}" style="background: #5f7696; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px;">Ver mi invitación</a>
         </div>
       `
     ),
@@ -75,7 +75,7 @@ export async function sendRsvpConfirmationEmail(guest: Guest, settings: Settings
         ${guest.dietary_restrictions ? `<p style="font-size: 14px; color: #78716c;">Restricción alimentaria registrada: ${guest.dietary_restrictions}</p>` : ''}
         <p style="font-size: 14px; line-height: 1.6;">Podés volver a consultar tu invitación cuando quieras desde este link:</p>
         <div style="text-align: center; margin: 28px 0;">
-          <a href="${url}" style="background: #c97b5e; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px;">Ver mi invitación</a>
+          <a href="${url}" style="background: #5f7696; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px;">Ver mi invitación</a>
         </div>
       `
     ),
@@ -107,9 +107,9 @@ export async function sendReminderEmail(guest: Guest, settings: Settings) {
         ${dateLabel ? `<p style="font-size: 14px;"><strong>Cuándo:</strong> ${dateLabel}</p>` : ''}
         ${settings.venue ? `<p style="font-size: 14px;"><strong>Dónde:</strong> ${settings.venue}</p>` : ''}
         ${settings.venue_address ? `<p style="font-size: 14px; color: #78716c;">${settings.venue_address}</p>` : ''}
-        ${settings.venue_map_url ? `<div style="text-align: center; margin: 16px 0;"><a href="${settings.venue_map_url}" style="color: #c97b5e; font-size: 14px;">Ver ubicación en el mapa</a></div>` : ''}
+        ${settings.venue_map_url ? `<div style="text-align: center; margin: 16px 0;"><a href="${settings.venue_map_url}" style="color: #5f7696; font-size: 14px;">Ver ubicación en el mapa</a></div>` : ''}
         <div style="text-align: center; margin: 28px 0;">
-          <a href="${url}" style="background: #c97b5e; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px;">Ver mi invitación</a>
+          <a href="${url}" style="background: #5f7696; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px;">Ver mi invitación</a>
         </div>
       `
     ),

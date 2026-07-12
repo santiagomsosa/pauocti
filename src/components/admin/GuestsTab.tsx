@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Trash2, Plus, Loader2, Mail, Pencil, Check, X, Send } from 'lucide-react'
+import { Trash2, Plus, Loader2, Mail, Phone, Pencil, Check, X, Send } from 'lucide-react'
 import type { Guest } from '@/types'
 
 const STATUS_LABEL: Record<Guest['rsvp_status'], string> = {
@@ -18,7 +18,7 @@ const STATUS_LABEL: Record<Guest['rsvp_status'], string> = {
 const STATUS_VARIANT: Record<Guest['rsvp_status'], string> = {
   pending: 'bg-stone-100 text-stone-500',
   attending: 'bg-sage-100 text-sage-600',
-  declined: 'bg-terracotta-100 text-terracotta-600',
+  declined: 'bg-rose-100 text-rose-600',
 }
 
 interface GuestsTabProps {
@@ -218,7 +218,7 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
                     onClick={() => sendInvitation(g.id)}
                     disabled={busyId === g.id || !g.email}
                     title={g.email ? 'Enviar invitación' : 'Sin correo cargado'}
-                    className="text-stone-300 hover:text-terracotta-400 disabled:opacity-30 transition-colors"
+                    className="text-stone-300 hover:text-ink-500 disabled:opacity-30 transition-colors"
                   >
                     <Send className="w-4 h-4" />
                   </button>
@@ -270,10 +270,19 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
                   </div>
                 </div>
               ) : (
-                g.email && (
-                  <p className="text-xs text-stone-400 flex items-center gap-1">
-                    <Mail className="w-3 h-3" /> {g.email}
-                  </p>
+                (g.email || g.phone) && (
+                  <div className="flex items-center gap-3">
+                    {g.email && (
+                      <p className="text-xs text-stone-400 flex items-center gap-1">
+                        <Mail className="w-3 h-3" /> {g.email}
+                      </p>
+                    )}
+                    {g.phone && (
+                      <p className="text-xs text-stone-400 flex items-center gap-1">
+                        <Phone className="w-3 h-3" /> {g.phone}
+                      </p>
+                    )}
+                  </div>
                 )
               )}
 

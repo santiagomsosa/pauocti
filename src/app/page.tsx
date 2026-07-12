@@ -37,7 +37,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-terracotta-100 via-cream-100 to-sage-50 px-4">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-rose-100 via-cream-100 to-sage-50 px-4">
       <WatercolorBranch className="absolute -top-6 -left-10 w-48 h-48 pointer-events-none" />
       <WatercolorBranch className="absolute -bottom-10 -right-12 w-56 h-56 rotate-180 pointer-events-none" />
       <GoldDots className="absolute top-10 right-6 w-24 h-14 pointer-events-none" />
@@ -67,14 +67,14 @@ export default function LoginPage() {
                 disabled={loading}
                 autoComplete="off"
                 autoFocus
-                className="w-full rounded-lg border border-stone-200 px-3 py-2 text-center text-base font-mono tracking-[0.3em] outline-none focus:border-terracotta-300 focus:ring-2 focus:ring-terracotta-100 disabled:opacity-50"
+                className="w-full rounded-lg border border-stone-200 px-3 py-2 text-center text-base font-mono tracking-[0.3em] outline-none focus:border-ink-300 focus:ring-2 focus:ring-ink-100 disabled:opacity-50"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-terracotta-400 py-2.5 text-sm font-medium text-white transition hover:bg-terracotta-500 disabled:opacity-50"
+              className="w-full rounded-lg bg-ink-500 py-2.5 text-sm font-medium text-white transition hover:bg-ink-600 disabled:opacity-50"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
