@@ -64,7 +64,7 @@ export function GoldDots({ className }: { className?: string }) {
       aria-hidden="true"
     >
       {dots.map((d, i) => (
-        <circle key={i} cx={d.x} cy={d.y} r={d.r} fill="var(--color-terracotta-500)" opacity={d.o} />
+        <circle key={i} cx={d.x} cy={d.y} r={d.r} fill="var(--color-sand-400)" opacity={d.o} />
       ))}
     </svg>
   )
@@ -89,47 +89,32 @@ export function HandDrawnUnderline({ className }: { className?: string }) {
   )
 }
 
-export function ChurchIcon({ className }: { className?: string }) {
+export function BotanicalDivider({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
-      <g
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M32 4 L32 16" />
-        <path d="M27 9 L37 9" />
-        <path d="M22 30 L32 17 L42 30" />
-        <path d="M22 30 L22 56" />
-        <path d="M42 30 L42 56" />
-        <path d="M28 56 L28 45 Q32 41 36 45 L36 56" />
-        <path d="M14 56 L50 56" />
-        <path d="M14 56 L14 40 L22 34" />
-        <path d="M50 56 L50 40 L42 34" />
-      </g>
+    <svg viewBox="0 0 200 24" fill="none" className={className} aria-hidden="true">
+      <path d="M2 12C30 12 45 12 60 12" stroke="var(--color-sage-400)" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M198 12C170 12 155 12 140 12" stroke="var(--color-sage-400)" strokeWidth="1.5" strokeLinecap="round" />
+      <Leaf transform="translate(52,9) rotate(-40) scale(0.5)" fill="var(--color-sage-400)" opacity={0.85} />
+      <Leaf transform="translate(60,14) rotate(40) scale(0.4)" fill="var(--color-sage-300)" opacity={0.8} />
+      <Leaf transform="translate(148,9) rotate(40) scale(0.5)" fill="var(--color-sage-400)" opacity={0.85} />
+      <Leaf transform="translate(140,14) rotate(-40) scale(0.4)" fill="var(--color-sage-300)" opacity={0.8} />
+      <path
+        d="M100 18C95 12 87 10 87 5C87 1.5 91 0 94 3C96 5 100 9 100 9C100 9 104 5 106 3C109 0 113 1.5 113 5C113 10 105 12 100 18Z"
+        fill="var(--color-rose-400)"
+      />
     </svg>
   )
 }
 
-export function PartyIcon({ className }: { className?: string }) {
+export function GiftIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
-      <g
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M16 14 L24 30 L27 16 Z" />
-        <path d="M24 30 L26 45" />
-        <path d="M20 46 L31 43" />
-        <path d="M48 14 L40 30 L37 16 Z" />
-        <path d="M40 30 L38 45" />
-        <path d="M44 46 L33 43" />
-        <path d="M32 6 L32 10" />
-        <path d="M27 8 L29 11" />
-        <path d="M37 8 L35 11" />
+      <g stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="10" y="24" width="44" height="12" rx="2" />
+        <rect x="14" y="36" width="36" height="20" rx="2" />
+        <path d="M32 24 L32 56" />
+        <path d="M32 24C28 24 24 21 24 17C24 14 27 13 29 15C31 17 32 24 32 24Z" />
+        <path d="M32 24C36 24 40 21 40 17C40 14 37 13 35 15C33 17 32 24 32 24Z" />
       </g>
     </svg>
   )

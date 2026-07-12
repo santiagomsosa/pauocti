@@ -9,12 +9,14 @@ import type { Guest } from '@/types'
 const plusOneSchema = z.object({
   name: z.string().min(1).max(100).trim(),
   email: z.string().email().max(200).trim().optional().or(z.literal('')),
+  phone: z.string().max(30).trim().optional().or(z.literal('')),
   rsvp_status: z.enum(['attending', 'declined']),
   dietary_restrictions: z.string().max(500).trim().optional().or(z.literal('')),
 })
 
 const schema = z.object({
   rsvp_status: z.enum(['attending', 'declined']),
+  phone: z.string().max(30).trim().optional().or(z.literal('')),
   dietary_restrictions: z.string().max(500).trim().optional().or(z.literal('')),
   plus_ones: z.array(plusOneSchema).max(10).default([]),
 })
@@ -24,7 +26,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   try {
     const body = await request.json()
-    const { rsvp_status, dietary_restrictions, plus_ones } = schema.parse(body)
+    const { rsvp_status, phone, dietary_restrictions, plus_ones } = schema.parse(body)
 
     const supabase = createServerClient()
     const { data: guest, error: fetchError } = await supabase
@@ -49,6 +51,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       .from('guests')
       .update({
         rsvp_status,
+        phone: phone || null,
         dietary_restrictions: dietary_restrictions || null,
         rsvp_submitted_at: new Date().toISOString(),
       })
@@ -64,6 +67,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const rows = plus_ones.map((p) => ({
         name: p.name,
         email: p.email || null,
+        phone: p.phone || null,
         code: generateGuestCode(),
         invite_token: generateInviteToken(),
         parent_guest_id: guest.id,

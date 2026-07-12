@@ -6,6 +6,7 @@ export interface Guest {
   code: string
   created_at: string
   email: string | null
+  phone: string | null
   invite_token: string | null
   max_plus_ones: number
   parent_guest_id: string | null
@@ -36,12 +37,14 @@ export interface Settings {
 export interface PlusOneInput {
   name: string
   email: string
+  phone: string
   rsvp_status: 'attending' | 'declined'
   dietary_restrictions: string
 }
 
 export interface RsvpSubmitPayload {
   rsvp_status: 'attending' | 'declined'
+  phone: string
   dietary_restrictions: string
   plus_ones: PlusOneInput[]
 }
