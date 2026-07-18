@@ -9,6 +9,32 @@ import { Badge } from '@/components/ui/badge'
 import { Trash2, Plus, Loader2, Mail, Phone, Pencil, Check, X, Send } from 'lucide-react'
 import type { Guest } from '@/types'
 
+function WhatsappIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+      <path d="M12.001 2C6.478 2 2 6.478 2 12c0 1.85.503 3.585 1.379 5.076L2 22l5.075-1.352A9.947 9.947 0 0 0 12.001 22C17.523 22 22 17.522 22 12S17.523 2 12.001 2zm0 18.164a8.13 8.13 0 0 1-4.15-1.137l-.298-.177-3.012.801.804-2.936-.194-.302a8.135 8.135 0 0 1-1.253-4.35c0-4.494 3.657-8.15 8.15-8.15 4.494 0 8.15 3.656 8.15 8.15s-3.656 8.15-8.15 8.15z" />
+    </svg>
+  )
+}
+
+function isMobileDevice(): boolean {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+}
+
+function shareViaWhatsapp(guest: Guest) {
+  if (!guest.invite_token) return
+  const url = `${window.location.origin}/invitacion/${guest.invite_token}`
+  const text = `¡Hola ${guest.name}! Te invitamos a nuestra boda. Podés ver tu invitación y confirmar tu asistencia acá: ${url}`
+
+  if (navigator.share && isMobileDevice()) {
+    navigator.share({ text }).catch(() => {})
+  } else {
+    const digits = guest.phone?.replace(/\D/g, '') ?? ''
+    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(text)}`, '_blank')
+  }
+}
+
 const STATUS_LABEL: Record<Guest['rsvp_status'], string> = {
   pending: 'Pendiente',
   attending: 'Asiste',
@@ -30,16 +56,18 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
   const [newGuestName, setNewGuestName] = useState('')
   const [newGuestCode, setNewGuestCode] = useState('')
   const [newGuestEmail, setNewGuestEmail] = useState('')
+  const [newGuestPhone, setNewGuestPhone] = useState('')
   const [newGuestPlusOnes, setNewGuestPlusOnes] = useState('0')
   const [addingGuest, setAddingGuest] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editEmail, setEditEmail] = useState('')
+  const [editPhone, setEditPhone] = useState('')
   const [editPlusOnes, setEditPlusOnes] = useState('0')
   const [busyId, setBusyId] = useState<string | null>(null)
 
   async function addGuest(e: React.FormEvent) {
     e.preventDefault()
-    if (!newGuestName.trim() || !newGuestCode.trim()) return
+    if (!newGuestName.trim() || !newGuestCode.trim() || !newGuestPhone.trim()) return
     setAddingGuest(true)
     const res = await fetch('/api/admin/guests', {
       method: 'POST',
@@ -48,6 +76,7 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
         name: newGuestName.trim(),
         code: newGuestCode.trim(),
         email: newGuestEmail.trim(),
+        phone: newGuestPhone.trim(),
         max_plus_ones: Number(newGuestPlusOnes) || 0,
       }),
     })
@@ -59,6 +88,7 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
       setNewGuestName('')
       setNewGuestCode('')
       setNewGuestEmail('')
+      setNewGuestPhone('')
       setNewGuestPlusOnes('0')
       toast.success('Invitado agregado')
     } else {
@@ -79,15 +109,25 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
   function startEdit(guest: Guest) {
     setEditingId(guest.id)
     setEditEmail(guest.email ?? '')
+    setEditPhone(guest.phone ?? '')
     setEditPlusOnes(String(guest.max_plus_ones))
   }
 
   async function saveEdit(id: string) {
+    if (!editPhone.trim()) {
+      toast.error('El teléfono es obligatorio')
+      return
+    }
     setBusyId(id)
     const res = await fetch('/api/admin/guests', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, email: editEmail.trim(), max_plus_ones: Number(editPlusOnes) || 0 }),
+      body: JSON.stringify({
+        id,
+        email: editEmail.trim(),
+        phone: editPhone.trim(),
+        max_plus_ones: Number(editPlusOnes) || 0,
+      }),
     })
     const data = await res.json()
     if (res.ok) {
@@ -178,6 +218,17 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
             />
           </div>
           <div className="space-y-1">
+            <Label>Teléfono</Label>
+            <Input
+              type="tel"
+              placeholder="Ej: 11 1234 5678"
+              value={newGuestPhone}
+              onChange={(e) => setNewGuestPhone(e.target.value)}
+              disabled={addingGuest}
+              required
+            />
+          </div>
+          <div className="space-y-1">
             <Label>Cupo de +1</Label>
             <Input
               type="number"
@@ -189,7 +240,11 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
             />
           </div>
         </div>
-        <Button type="submit" disabled={addingGuest || !newGuestName.trim() || !newGuestCode.trim()} size="sm">
+        <Button
+          type="submit"
+          disabled={addingGuest || !newGuestName.trim() || !newGuestCode.trim() || !newGuestPhone.trim()}
+          size="sm"
+        >
           {addingGuest ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4 mr-1" />Agregar</>}
         </Button>
       </form>
@@ -214,6 +269,14 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
                   )}
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
+                  <button
+                    onClick={() => shareViaWhatsapp(g)}
+                    disabled={!g.invite_token}
+                    title="Enviar por WhatsApp"
+                    className="text-stone-300 hover:text-green-500 disabled:opacity-30 transition-colors"
+                  >
+                    <WhatsappIcon className="w-4 h-4" />
+                  </button>
                   <button
                     onClick={() => sendInvitation(g.id)}
                     disabled={busyId === g.id || !g.email}
@@ -247,6 +310,16 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
                       />
                     </div>
                     <div className="space-y-1">
+                      <Label className="text-xs">Teléfono</Label>
+                      <Input
+                        type="tel"
+                        value={editPhone}
+                        onChange={(e) => setEditPhone(e.target.value)}
+                        disabled={busyId === g.id}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
                       <Label className="text-xs">Cupo de +1</Label>
                       <Input
                         type="number"
@@ -259,7 +332,7 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="xs" onClick={() => saveEdit(g.id)} disabled={busyId === g.id}>
+                    <Button size="xs" onClick={() => saveEdit(g.id)} disabled={busyId === g.id || !editPhone.trim()}>
                       <Check className="w-3.5 h-3.5 mr-1" />
                       Guardar
                     </Button>
@@ -299,17 +372,27 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
                         </div>
                         <p className="text-xs text-stone-400 font-mono">{p.code}</p>
                       </div>
-                      <button
-                        onClick={() => toggleActive(p, g.id)}
-                        disabled={busyId === p.id}
-                        className={`flex-shrink-0 text-xs font-medium px-2.5 py-1 rounded-full transition-colors ${
-                          p.is_active
-                            ? 'bg-sage-100 text-sage-600 hover:bg-sage-200'
-                            : 'bg-stone-200 text-stone-500 hover:bg-stone-300'
-                        }`}
-                      >
-                        {p.is_active ? 'Activo' : 'Activar'}
-                      </button>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                          onClick={() => shareViaWhatsapp(p)}
+                          disabled={!p.invite_token}
+                          title="Enviar por WhatsApp"
+                          className="text-stone-300 hover:text-green-500 disabled:opacity-30 transition-colors"
+                        >
+                          <WhatsappIcon className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => toggleActive(p, g.id)}
+                          disabled={busyId === p.id}
+                          className={`text-xs font-medium px-2.5 py-1 rounded-full transition-colors ${
+                            p.is_active
+                              ? 'bg-sage-100 text-sage-600 hover:bg-sage-200'
+                              : 'bg-stone-200 text-stone-500 hover:bg-stone-300'
+                          }`}
+                        >
+                          {p.is_active ? 'Activo' : 'Activar'}
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

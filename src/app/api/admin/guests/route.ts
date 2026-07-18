@@ -8,12 +8,14 @@ const guestSchema = z.object({
   name: z.string().min(1).max(100).trim(),
   code: z.string().min(3).max(30).trim(),
   email: z.string().email().max(200).trim().optional().or(z.literal('')),
+  phone: z.string().min(6).max(30).trim(),
   max_plus_ones: z.coerce.number().int().min(0).max(10).default(0),
 })
 
 const patchSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email().max(200).trim().optional().or(z.literal('')).nullable(),
+  phone: z.string().min(6).max(30).trim().optional(),
   max_plus_ones: z.coerce.number().int().min(0).max(10).optional(),
   is_active: z.boolean().optional(),
 })
@@ -47,7 +49,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, code, email, max_plus_ones } = guestSchema.parse(body)
+    const { name, code, email, phone, max_plus_ones } = guestSchema.parse(body)
 
     const supabase = createServerClient()
     const { data, error } = await supabase
@@ -56,6 +58,7 @@ export async function POST(request: NextRequest) {
         name,
         code,
         email: email || null,
+        phone,
         max_plus_ones,
         invite_token: generateInviteToken(),
       })
@@ -80,10 +83,11 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json()
-    const { id, email, max_plus_ones, is_active } = patchSchema.parse(body)
+    const { id, email, phone, max_plus_ones, is_active } = patchSchema.parse(body)
 
     const update: Record<string, unknown> = {}
     if (email !== undefined) update.email = email || null
+    if (phone !== undefined) update.phone = phone
     if (max_plus_ones !== undefined) update.max_plus_ones = max_plus_ones
     if (is_active !== undefined) update.is_active = is_active
 
