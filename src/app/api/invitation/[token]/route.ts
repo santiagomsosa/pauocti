@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
-import { generateGuestCode, generateInviteToken } from '@/lib/invite'
+import { generateInviteToken, generateUniqueGuestCode } from '@/lib/invite'
 import { sendRsvpConfirmationEmail } from '@/lib/email'
 import { getSettings } from '@/lib/settings'
 import { z } from 'zod'
@@ -63,24 +63,30 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'Error al guardar la confirmación' }, { status: 500 })
     }
 
+    let insertedPlusOnes: Guest[] = []
     if (plus_ones.length > 0) {
-      const rows = plus_ones.map((p) => ({
-        name: p.name,
-        email: p.email || null,
-        phone: p.phone || null,
-        code: generateGuestCode(),
-        invite_token: generateInviteToken(),
-        parent_guest_id: guest.id,
-        is_active: false,
-        rsvp_status: p.rsvp_status,
-        dietary_restrictions: p.dietary_restrictions || null,
-        rsvp_submitted_at: new Date().toISOString(),
-      }))
+      const takenCodes = new Set<string>()
+      const rows = []
+      for (const p of plus_ones) {
+        rows.push({
+          name: p.name,
+          email: p.email || null,
+          phone: p.phone || null,
+          code: await generateUniqueGuestCode(supabase, takenCodes),
+          invite_token: generateInviteToken(),
+          parent_guest_id: guest.id,
+          is_active: false,
+          rsvp_status: p.rsvp_status,
+          dietary_restrictions: p.dietary_restrictions || null,
+          rsvp_submitted_at: new Date().toISOString(),
+        })
+      }
 
-      const { error: plusOnesError } = await supabase.from('guests').insert(rows)
+      const { data: inserted, error: plusOnesError } = await supabase.from('guests').insert(rows).select()
       if (plusOnesError) {
         return NextResponse.json({ error: 'Error al guardar los acompañantes' }, { status: 500 })
       }
+      insertedPlusOnes = (inserted ?? []) as Guest[]
     }
 
     try {
@@ -90,7 +96,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       // El fallo de envío no debe romper el guardado del RSVP
     }
 
-    return NextResponse.json({ guest: updated })
+    return NextResponse.json({ guest: { ...updated, plus_ones: insertedPlusOnes } })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.issues[0].message }, { status: 400 })

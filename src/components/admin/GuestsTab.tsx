@@ -6,8 +6,84 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Trash2, Plus, Loader2, Mail, Phone, Pencil, Check, X, Send } from 'lucide-react'
-import type { Guest } from '@/types'
+import { Trash2, Plus, Loader2, Mail, Phone, Pencil, Check, X, Send, Link2 } from 'lucide-react'
+import type { Guest, InvitationType, PlusOnePreload } from '@/types'
+
+function PreloadEditor({
+  label,
+  addLabel,
+  preload,
+  cap,
+  disabled,
+  onAdd,
+  onUpdate,
+  onRemove,
+}: {
+  label: string
+  addLabel: string
+  preload: PlusOnePreload[]
+  cap: number
+  disabled: boolean
+  onAdd: () => void
+  onUpdate: (index: number, patch: Partial<PlusOnePreload>) => void
+  onRemove: (index: number) => void
+}) {
+  return (
+    <div className="space-y-2 pt-1">
+      <div className="flex items-center justify-between">
+        <Label className="text-xs">
+          {label} ({preload.length}/{cap})
+        </Label>
+        {preload.length < cap && (
+          <button
+            type="button"
+            onClick={onAdd}
+            disabled={disabled}
+            className="flex items-center gap-1 text-xs font-medium text-ink-500 hover:text-ink-600"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            {addLabel}
+          </button>
+        )}
+      </div>
+      {preload.map((p, i) => (
+        <div key={i} className="grid grid-cols-3 gap-2 items-start">
+          <Input
+            placeholder="Nombre"
+            value={p.name}
+            onChange={(e) => onUpdate(i, { name: e.target.value })}
+            disabled={disabled}
+          />
+          <Input
+            type="email"
+            placeholder="Correo (opcional)"
+            value={p.email}
+            onChange={(e) => onUpdate(i, { email: e.target.value })}
+            disabled={disabled}
+          />
+          <div className="flex gap-1">
+            <Input
+              type="tel"
+              placeholder="Teléfono"
+              value={p.phone}
+              onChange={(e) => onUpdate(i, { phone: e.target.value })}
+              disabled={disabled}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => onRemove(i)}
+              disabled={disabled}
+              className="flex-shrink-0 text-stone-300 hover:text-red-400"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 function WhatsappIcon({ className }: { className?: string }) {
   return (
@@ -35,6 +111,19 @@ function shareViaWhatsapp(guest: Guest) {
   }
 }
 
+function familyLabel(name: string): string {
+  return /^familia\b/i.test(name) ? name : `la familia ${name}`
+}
+
+function copyInviteLink(guest: Guest) {
+  if (!guest.invite_token) return
+  const url = `${window.location.origin}/invitacion/${guest.invite_token}`
+  navigator.clipboard?.writeText(url).then(
+    () => toast.success('Enlace copiado'),
+    () => toast.error('No se pudo copiar el enlace')
+  )
+}
+
 const STATUS_LABEL: Record<Guest['rsvp_status'], string> = {
   pending: 'Pendiente',
   attending: 'Asiste',
@@ -53,31 +142,62 @@ interface GuestsTabProps {
 }
 
 export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
+  const [newGuestType, setNewGuestType] = useState<InvitationType>('individual')
   const [newGuestName, setNewGuestName] = useState('')
-  const [newGuestCode, setNewGuestCode] = useState('')
   const [newGuestEmail, setNewGuestEmail] = useState('')
   const [newGuestPhone, setNewGuestPhone] = useState('')
   const [newGuestPlusOnes, setNewGuestPlusOnes] = useState('0')
+  const [newGuestPreload, setNewGuestPreload] = useState<PlusOnePreload[]>([])
   const [addingGuest, setAddingGuest] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [editType, setEditType] = useState<InvitationType>('individual')
   const [editEmail, setEditEmail] = useState('')
   const [editPhone, setEditPhone] = useState('')
   const [editPlusOnes, setEditPlusOnes] = useState('0')
+  const [editPreload, setEditPreload] = useState<PlusOnePreload[]>([])
   const [busyId, setBusyId] = useState<string | null>(null)
+
+  function preloadHandlers(preload: PlusOnePreload[], setPreload: (updater: (prev: PlusOnePreload[]) => PlusOnePreload[]) => void, cap: number) {
+    return {
+      add: () => {
+        if (preload.length >= cap) return
+        setPreload((prev) => [...prev, { name: '', email: '', phone: '' }])
+      },
+      update: (index: number, patch: Partial<PlusOnePreload>) =>
+        setPreload((prev) => prev.map((p, i) => (i === index ? { ...p, ...patch } : p))),
+      remove: (index: number) => setPreload((prev) => prev.filter((_, i) => i !== index)),
+    }
+  }
+
+  const newPreload = preloadHandlers(newGuestPreload, setNewGuestPreload, Number(newGuestPlusOnes) || 0)
+  const editPreloadHandlers = preloadHandlers(editPreload, setEditPreload, Number(editPlusOnes) || 0)
 
   async function addGuest(e: React.FormEvent) {
     e.preventDefault()
-    if (!newGuestName.trim() || !newGuestCode.trim() || !newGuestPhone.trim()) return
+    if (!newGuestName.trim() || !newGuestPhone.trim()) return
+    if (newGuestType === 'family' && (Number(newGuestPlusOnes) || 0) < 1) {
+      toast.error('Una familia necesita al menos 1 integrante')
+      return
+    }
+    if (newGuestPreload.some((p) => !p.name.trim() || !p.phone.trim())) {
+      toast.error('Completá el nombre y teléfono de todos los integrantes precargados')
+      return
+    }
     setAddingGuest(true)
     const res = await fetch('/api/admin/guests', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: newGuestName.trim(),
-        code: newGuestCode.trim(),
         email: newGuestEmail.trim(),
         phone: newGuestPhone.trim(),
+        invitation_type: newGuestType,
         max_plus_ones: Number(newGuestPlusOnes) || 0,
+        plus_ones_preload: newGuestPreload.map((p) => ({
+          name: p.name.trim(),
+          email: p.email.trim(),
+          phone: p.phone.trim(),
+        })),
       }),
     })
     const data = await res.json()
@@ -85,11 +205,12 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
       setGuests((prev) =>
         [...prev, { ...data.guest, plus_ones: [] }].sort((a, b) => a.name.localeCompare(b.name))
       )
+      setNewGuestType('individual')
       setNewGuestName('')
-      setNewGuestCode('')
       setNewGuestEmail('')
       setNewGuestPhone('')
       setNewGuestPlusOnes('0')
+      setNewGuestPreload([])
       toast.success('Invitado agregado')
     } else {
       toast.error(data.error)
@@ -108,14 +229,24 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
 
   function startEdit(guest: Guest) {
     setEditingId(guest.id)
+    setEditType(guest.invitation_type)
     setEditEmail(guest.email ?? '')
     setEditPhone(guest.phone ?? '')
     setEditPlusOnes(String(guest.max_plus_ones))
+    setEditPreload(guest.plus_ones_preload ?? [])
   }
 
   async function saveEdit(id: string) {
     if (!editPhone.trim()) {
       toast.error('El teléfono es obligatorio')
+      return
+    }
+    if (editType === 'family' && (Number(editPlusOnes) || 0) < 1) {
+      toast.error('Una familia necesita al menos 1 integrante')
+      return
+    }
+    if (editPreload.some((p) => !p.name.trim() || !p.phone.trim())) {
+      toast.error('Completá el nombre y teléfono de todos los integrantes precargados')
       return
     }
     setBusyId(id)
@@ -126,7 +257,13 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
         id,
         email: editEmail.trim(),
         phone: editPhone.trim(),
+        invitation_type: editType,
         max_plus_ones: Number(editPlusOnes) || 0,
+        plus_ones_preload: editPreload.map((p) => ({
+          name: p.name.trim(),
+          email: p.email.trim(),
+          phone: p.phone.trim(),
+        })),
       }),
     })
     const data = await res.json()
@@ -187,28 +324,30 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
     <div className="space-y-4">
       <form onSubmit={addGuest} className="bg-white rounded-xl p-4 shadow-sm space-y-3">
         <h2 className="font-semibold text-stone-700">Agregar invitado</h2>
+        <div className="space-y-1">
+          <Label>Tipo</Label>
+          <select
+            value={newGuestType}
+            onChange={(e) => setNewGuestType(e.target.value as InvitationType)}
+            disabled={addingGuest}
+            className="h-9 w-full min-w-0 rounded-lg border border-input bg-transparent px-3 py-1 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+          >
+            <option value="individual">Individual</option>
+            <option value="family">Familia</option>
+          </select>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <Label>Nombre</Label>
+            <Label>{newGuestType === 'family' ? 'Nombre de la familia' : 'Nombre'}</Label>
             <Input
-              placeholder="Ej: María García"
+              placeholder={newGuestType === 'family' ? 'Ej: Familia García' : 'Ej: María García'}
               value={newGuestName}
               onChange={(e) => setNewGuestName(e.target.value)}
               disabled={addingGuest}
             />
           </div>
           <div className="space-y-1">
-            <Label>Código</Label>
-            <Input
-              placeholder="Ej: MG001"
-              value={newGuestCode}
-              onChange={(e) => setNewGuestCode(e.target.value.toUpperCase())}
-              disabled={addingGuest}
-              className="font-mono"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label>Correo</Label>
+            <Label>{newGuestType === 'family' ? 'Correo de contacto' : 'Correo'}</Label>
             <Input
               type="email"
               placeholder="maria@mail.com"
@@ -218,7 +357,7 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
             />
           </div>
           <div className="space-y-1">
-            <Label>Teléfono</Label>
+            <Label>{newGuestType === 'family' ? 'Teléfono de contacto' : 'Teléfono'}</Label>
             <Input
               type="tel"
               placeholder="Ej: 11 1234 5678"
@@ -229,10 +368,10 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
             />
           </div>
           <div className="space-y-1">
-            <Label>Cupo de +1</Label>
+            <Label>{newGuestType === 'family' ? 'Integrantes' : 'Cupo de +1'}</Label>
             <Input
               type="number"
-              min={0}
+              min={newGuestType === 'family' ? 1 : 0}
               max={10}
               value={newGuestPlusOnes}
               onChange={(e) => setNewGuestPlusOnes(e.target.value)}
@@ -240,12 +379,38 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
             />
           </div>
         </div>
+        {newGuestType === 'family' && (
+          <p className="text-xs text-stone-400">
+            El correo y teléfono son para enviarle la invitación a la familia, no son datos de un integrante.
+          </p>
+        )}
+
+        {Number(newGuestPlusOnes) > 0 && (
+          <PreloadEditor
+            label={newGuestType === 'family' ? 'Precargar integrantes' : 'Precargar acompañantes'}
+            addLabel={newGuestType === 'family' ? 'Agregar integrante' : 'Agregar acompañante'}
+            preload={newGuestPreload}
+            cap={Number(newGuestPlusOnes) || 0}
+            disabled={addingGuest}
+            onAdd={newPreload.add}
+            onUpdate={newPreload.update}
+            onRemove={newPreload.remove}
+          />
+        )}
+
         <Button
           type="submit"
-          disabled={addingGuest || !newGuestName.trim() || !newGuestCode.trim() || !newGuestPhone.trim()}
+          disabled={addingGuest || !newGuestName.trim() || !newGuestPhone.trim()}
           size="sm"
         >
-          {addingGuest ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4 mr-1" />Agregar</>}
+          {addingGuest ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <>
+              <Plus className="w-4 h-4 mr-1" />
+              {newGuestType === 'family' ? 'Agregar familia' : 'Agregar invitado'}
+            </>
+          )}
         </Button>
       </form>
 
@@ -259,16 +424,37 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="font-medium text-stone-800 text-sm truncate">{g.name}</p>
+                    {g.invitation_type === 'family' && (
+                      <Badge className="text-[10px] px-1.5 py-0 h-4 bg-ink-100 text-ink-600">Familia</Badge>
+                    )}
                     <Badge className={`text-[10px] px-1.5 py-0 h-4 ${STATUS_VARIANT[g.rsvp_status]}`}>
                       {STATUS_LABEL[g.rsvp_status]}
                     </Badge>
                   </div>
-                  <p className="text-xs text-stone-400 font-mono">{g.code}</p>
+                  {g.invitation_type !== 'family' && (
+                    <p className="text-xs text-stone-400">
+                      Código de acceso: <span className="font-mono">{g.code}</span>
+                    </p>
+                  )}
                   {g.dietary_restrictions && (
                     <p className="text-xs text-stone-500 mt-0.5">🍽️ {g.dietary_restrictions}</p>
                   )}
+                  {g.rsvp_status === 'pending' && g.plus_ones_preload?.length > 0 && (
+                    <p className="text-xs text-stone-500 mt-0.5">
+                      {g.invitation_type === 'family' ? 'Integrantes precargados' : '+1 precargados'}:{' '}
+                      {g.plus_ones_preload.map((p) => p.name).join(', ')}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
+                  <button
+                    onClick={() => copyInviteLink(g)}
+                    disabled={!g.invite_token}
+                    title="Copiar enlace de la invitación"
+                    className="text-stone-300 hover:text-ink-500 disabled:opacity-30 transition-colors"
+                  >
+                    <Link2 className="w-4 h-4" />
+                  </button>
                   <button
                     onClick={() => shareViaWhatsapp(g)}
                     disabled={!g.invite_token}
@@ -299,9 +485,21 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
 
               {editingId === g.id ? (
                 <div className="bg-cream-50 rounded-lg p-3 space-y-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Tipo</Label>
+                    <select
+                      value={editType}
+                      onChange={(e) => setEditType(e.target.value as InvitationType)}
+                      disabled={busyId === g.id}
+                      className="h-9 w-full min-w-0 rounded-lg border border-input bg-transparent px-3 py-1 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                    >
+                      <option value="individual">Individual</option>
+                      <option value="family">Familia</option>
+                    </select>
+                  </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
-                      <Label className="text-xs">Correo</Label>
+                      <Label className="text-xs">{editType === 'family' ? 'Correo de contacto' : 'Correo'}</Label>
                       <Input
                         type="email"
                         value={editEmail}
@@ -310,7 +508,7 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs">Teléfono</Label>
+                      <Label className="text-xs">{editType === 'family' ? 'Teléfono de contacto' : 'Teléfono'}</Label>
                       <Input
                         type="tel"
                         value={editPhone}
@@ -320,10 +518,10 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs">Cupo de +1</Label>
+                      <Label className="text-xs">{editType === 'family' ? 'Integrantes' : 'Cupo de +1'}</Label>
                       <Input
                         type="number"
-                        min={0}
+                        min={editType === 'family' ? 1 : 0}
                         max={10}
                         value={editPlusOnes}
                         onChange={(e) => setEditPlusOnes(e.target.value)}
@@ -331,6 +529,26 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
                       />
                     </div>
                   </div>
+
+                  {editType === 'family' && (
+                    <p className="text-xs text-stone-400">
+                      El correo y teléfono son para enviarle la invitación a la familia, no son datos de un integrante.
+                    </p>
+                  )}
+
+                  {Number(editPlusOnes) > 0 && (
+                    <PreloadEditor
+                      label={editType === 'family' ? 'Precargar integrantes' : 'Precargar acompañantes'}
+                      addLabel={editType === 'family' ? 'Agregar integrante' : 'Agregar acompañante'}
+                      preload={editPreload}
+                      cap={Number(editPlusOnes) || 0}
+                      disabled={busyId === g.id}
+                      onAdd={editPreloadHandlers.add}
+                      onUpdate={editPreloadHandlers.update}
+                      onRemove={editPreloadHandlers.remove}
+                    />
+                  )}
+
                   <div className="flex gap-2">
                     <Button size="xs" onClick={() => saveEdit(g.id)} disabled={busyId === g.id || !editPhone.trim()}>
                       <Check className="w-3.5 h-3.5 mr-1" />
@@ -367,12 +585,24 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
                         <div className="flex items-center gap-2">
                           <p className="text-sm text-stone-700 truncate">{p.name}</p>
                           <Badge className="text-[10px] px-1.5 py-0 h-4 bg-sage-100 text-sage-600">
-                            +1 de {g.name}
+                            {g.invitation_type === 'family'
+                              ? `Integrante de ${familyLabel(g.name)}`
+                              : `+1 de ${g.name}`}
                           </Badge>
                         </div>
-                        <p className="text-xs text-stone-400 font-mono">{p.code}</p>
+                        <p className="text-xs text-stone-400">
+                          Código de acceso: <span className="font-mono">{p.code}</span>
+                        </p>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                          onClick={() => copyInviteLink(p)}
+                          disabled={!p.invite_token}
+                          title="Copiar enlace de la invitación"
+                          className="text-stone-300 hover:text-ink-500 disabled:opacity-30 transition-colors"
+                        >
+                          <Link2 className="w-4 h-4" />
+                        </button>
                         <button
                           onClick={() => shareViaWhatsapp(p)}
                           disabled={!p.invite_token}

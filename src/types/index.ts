@@ -1,5 +1,7 @@
 export type RsvpStatus = 'pending' | 'attending' | 'declined'
 
+export type InvitationType = 'individual' | 'family'
+
 export interface Guest {
   id: string
   name: string
@@ -8,13 +10,21 @@ export interface Guest {
   email: string | null
   phone: string | null
   invite_token: string | null
+  invitation_type: InvitationType
   max_plus_ones: number
   parent_guest_id: string | null
   is_active: boolean
   rsvp_status: RsvpStatus
   dietary_restrictions: string | null
   rsvp_submitted_at: string | null
+  plus_ones_preload: PlusOnePreload[]
   plus_ones?: Guest[]
+}
+
+export interface PlusOnePreload {
+  name: string
+  email: string
+  phone: string
 }
 
 export interface Settings {
