@@ -18,7 +18,12 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
     notFound()
   }
 
+  const { data: plusOnes } = await supabase
+    .from('guests')
+    .select('*')
+    .eq('parent_guest_id', guest.id)
+
   const settings = await getSettings()
 
-  return <InvitationView guest={guest as Guest} settings={settings} />
+  return <InvitationView guest={{ ...guest, plus_ones: plusOnes ?? [] } as Guest} settings={settings} />
 }

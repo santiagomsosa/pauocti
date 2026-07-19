@@ -18,11 +18,25 @@ function emptyPlusOne(): PlusOneInput {
   return { name: '', email: '', phone: '', rsvp_status: 'attending', dietary_restrictions: '' }
 }
 
+function preloadedPlusOnes(guest: Guest, pad: boolean): PlusOneInput[] {
+  const preload: PlusOneInput[] = (guest.plus_ones_preload ?? []).slice(0, guest.max_plus_ones).map((p) => ({
+    name: p.name,
+    email: p.email,
+    phone: p.phone,
+    rsvp_status: 'attending',
+    dietary_restrictions: '',
+  }))
+  if (!pad) return preload
+  while (preload.length < guest.max_plus_ones) preload.push(emptyPlusOne())
+  return preload
+}
+
 export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
+  const isFamily = guest.invitation_type === 'family'
   const [attending, setAttending] = useState<'attending' | 'declined' | null>(null)
   const [phone, setPhone] = useState('')
   const [dietary, setDietary] = useState('')
-  const [plusOnes, setPlusOnes] = useState<PlusOneInput[]>([])
+  const [plusOnes, setPlusOnes] = useState<PlusOneInput[]>(() => preloadedPlusOnes(guest, isFamily))
   const [loading, setLoading] = useState(false)
 
   function addPlusOne() {
@@ -40,14 +54,20 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!attending) {
+    if (!isFamily && !attending) {
       toast.error('Indicá si vas a asistir')
       return
     }
     if (plusOnes.some((p) => !p.name.trim())) {
-      toast.error('Completá el nombre de todos los acompañantes')
+      toast.error(isFamily ? 'Completá el nombre de todos los integrantes' : 'Completá el nombre de todos los acompañantes')
       return
     }
+
+    const rsvpStatus = isFamily
+      ? plusOnes.some((p) => p.rsvp_status === 'attending')
+        ? 'attending'
+        : 'declined'
+      : (attending as 'attending' | 'declined')
 
     setLoading(true)
     try {
@@ -55,7 +75,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          rsvp_status: attending,
+          rsvp_status: rsvpStatus,
           phone,
           dietary_restrictions: dietary,
           plus_ones: plusOnes,
@@ -83,46 +103,54 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
       className="max-w-md mx-auto rounded-3xl border border-ink-200/70 bg-ink-50/60 p-6 space-y-5 shadow-sm"
     >
       <div className="space-y-2 text-center">
-        <p className="font-title text-xs uppercase tracking-[0.25em] text-ink-500">Confirmá tu asistencia</p>
-        <p className="text-stone-700 leading-relaxed">
-          {guest.name}, nos gustaría que nos acompañes en este día tan especial
+        <p className="font-title text-xs uppercase tracking-[0.25em] text-ink-500">
+          {isFamily ? 'Confirmá la asistencia de tu familia' : 'Confirmá tu asistencia'}
         </p>
-        <div className="grid grid-cols-2 gap-3 pt-1">
-          <motion.button
-            type="button"
-            onClick={() => setAttending('attending')}
-            disabled={loading}
-            animate={attending === null ? { scale: [1, 1.04, 1] } : { scale: 1 }}
-            transition={attending === null ? { repeat: Infinity, duration: 1.6 } : { duration: 0.2 }}
-            className={`font-title flex items-center justify-center gap-1.5 rounded-full py-3 text-sm uppercase tracking-wide font-semibold border-2 transition ${
-              attending === 'attending'
-                ? 'bg-ink-600 border-ink-600 text-white shadow-md'
-                : attending === 'declined'
-                  ? 'bg-transparent border-stone-300 text-stone-500'
-                  : 'bg-ink-500 border-ink-500 text-white shadow-md hover:bg-ink-600'
-            }`}
-          >
-            {attending === 'attending' && <Check className="w-4 h-4" />}
-            ¡Sí, voy!
-          </motion.button>
-          <button
-            type="button"
-            onClick={() => setAttending('declined')}
-            disabled={loading}
-            className={`font-title rounded-full py-3 text-sm uppercase tracking-wide font-semibold border-2 transition ${
-              attending === 'declined'
-                ? 'bg-stone-600 border-stone-600 text-white'
-                : 'bg-transparent border-stone-300 text-stone-500 hover:border-stone-400'
-            }`}
-          >
-            No puedo ir
-          </button>
-        </div>
+        <p className="text-stone-700 leading-relaxed">
+          {isFamily
+            ? `${guest.name}, contanos quiénes de ustedes nos van a acompañar en este día tan especial`
+            : `${guest.name}, nos gustaría que nos acompañes en este día tan especial`}
+        </p>
+        {!isFamily && (
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <motion.button
+              type="button"
+              onClick={() => setAttending('attending')}
+              disabled={loading}
+              animate={attending === null ? { scale: [1, 1.04, 1] } : { scale: 1 }}
+              transition={attending === null ? { repeat: Infinity, duration: 1.6 } : { duration: 0.2 }}
+              className={`font-title flex items-center justify-center gap-1.5 rounded-full py-3 text-sm uppercase tracking-wide font-semibold border-2 transition ${
+                attending === 'attending'
+                  ? 'bg-ink-600 border-ink-600 text-white shadow-md'
+                  : attending === 'declined'
+                    ? 'bg-transparent border-stone-300 text-stone-500'
+                    : 'bg-ink-500 border-ink-500 text-white shadow-md hover:bg-ink-600'
+              }`}
+            >
+              {attending === 'attending' && <Check className="w-4 h-4" />}
+              ¡Sí, voy!
+            </motion.button>
+            <button
+              type="button"
+              onClick={() => setAttending('declined')}
+              disabled={loading}
+              className={`font-title rounded-full py-3 text-sm uppercase tracking-wide font-semibold border-2 transition ${
+                attending === 'declined'
+                  ? 'bg-stone-600 border-stone-600 text-white'
+                  : 'bg-transparent border-stone-300 text-stone-500 hover:border-stone-400'
+              }`}
+            >
+              No puedo ir
+            </button>
+          </div>
+        )}
       </div>
 
-      {attending === 'attending' && (
+      {(isFamily || attending === 'attending') && (
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-stone-700">Tu teléfono</label>
+          <label className="text-sm font-medium text-stone-700">
+            {isFamily ? 'Teléfono de contacto' : 'Tu teléfono'}
+          </label>
           <input
             type="tel"
             value={phone}
@@ -134,7 +162,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
         </div>
       )}
 
-      {attending === 'attending' && (
+      {!isFamily && attending === 'attending' && (
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-stone-700">¿Alguna restricción alimentaria?</label>
           <textarea
@@ -148,13 +176,13 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
         </div>
       )}
 
-      {attending === 'attending' && guest.max_plus_ones > 0 && (
+      {(isFamily || attending === 'attending') && guest.max_plus_ones > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-stone-700">
-              Acompañantes ({plusOnes.length}/{guest.max_plus_ones})
+              {isFamily ? 'Integrantes' : `Acompañantes (${plusOnes.length}/${guest.max_plus_ones})`}
             </p>
-            {plusOnes.length < guest.max_plus_ones && (
+            {!isFamily && plusOnes.length < guest.max_plus_ones && (
               <button
                 type="button"
                 onClick={addPlusOne}
@@ -177,15 +205,19 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
                 className="rounded-xl border border-stone-200/70 p-3 space-y-2"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-stone-500">Acompañante {i + 1}</span>
-                  <button
-                    type="button"
-                    onClick={() => removePlusOne(i)}
-                    disabled={loading}
-                    className="text-stone-300 hover:text-red-400"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <span className="text-xs font-medium text-stone-500">
+                    {isFamily ? `Integrante ${i + 1}` : `Acompañante ${i + 1}`}
+                  </span>
+                  {!isFamily && (
+                    <button
+                      type="button"
+                      onClick={() => removePlusOne(i)}
+                      disabled={loading}
+                      className="text-stone-300 hover:text-red-400"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
                 <input
                   type="text"
@@ -236,7 +268,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
 
       <button
         type="submit"
-        disabled={loading || !attending}
+        disabled={loading || (!isFamily && !attending)}
         className="font-title w-full rounded-full bg-ink-500 py-2.5 text-sm uppercase tracking-wide text-white transition hover:bg-ink-600 disabled:opacity-50"
       >
         {loading ? (

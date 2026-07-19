@@ -194,7 +194,9 @@ export function InvitationView({ guest: initialGuest, settings }: { guest: Guest
           >
             {dateLabel && <p className="text-lg tracking-[0.2em] text-rose-400">{dateLabel}</p>}
             <p className="text-lg text-stone-600">
-              Invitación para <span className="font-medium text-stone-800">{guest.name}</span>
+              Invitación para{' '}
+              {guest.invitation_type === 'family' && !/^familia\b/i.test(guest.name) && 'la familia '}
+              <span className="font-medium text-stone-800">{guest.name}</span>
             </p>
             <p className="text-sm text-stone-500 max-w-xs mx-auto leading-relaxed">
               ¡Cada vez falta menos! Nos alegra muchísimo que seas parte de este día.
@@ -307,20 +309,29 @@ export function InvitationView({ guest: initialGuest, settings }: { guest: Guest
             className="text-center space-y-3"
           >
             <p className="font-title text-xs uppercase tracking-[0.25em] text-sage-500">Acceso a la app</p>
-            <p className="text-sm text-stone-500">
-              Entrá con este código para ver la galería, subir fotos y más
-            </p>
-            <div className="inline-block rounded-xl border-2 border-dashed border-ink-300 px-7 py-3">
-              <p className="font-mono text-2xl tracking-[0.3em] text-ink-600">{guest.code}</p>
-            </div>
-            <div>
-              <Link
-                href="/"
-                className="font-title inline-flex items-center justify-center rounded-full bg-ink-500 px-8 py-2.5 text-sm uppercase tracking-wide text-white transition hover:bg-ink-600"
-              >
-                Entrar a la app
-              </Link>
-            </div>
+            {guest.invitation_type === 'family' ? (
+              <p className="text-sm text-stone-500 max-w-xs mx-auto leading-relaxed">
+                Cada integrante va a recibir su propio código para entrar a la app y ver la galería, subir
+                fotos y más.
+              </p>
+            ) : (
+              <>
+                <p className="text-sm text-stone-500">
+                  Entrá con este código para ver la galería, subir fotos y más
+                </p>
+                <div className="inline-block rounded-xl border-2 border-dashed border-ink-300 px-7 py-3">
+                  <p className="font-mono text-2xl tracking-[0.3em] text-ink-600">{guest.code}</p>
+                </div>
+                <div>
+                  <Link
+                    href="/"
+                    className="font-title inline-flex items-center justify-center rounded-full bg-ink-500 px-8 py-2.5 text-sm uppercase tracking-wide text-white transition hover:bg-ink-600"
+                  >
+                    Entrar a la app
+                  </Link>
+                </div>
+              </>
+            )}
           </motion.section>
         </div>
       </div>

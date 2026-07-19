@@ -12,9 +12,10 @@ interface Attendee {
 
 export function FrozenInvitation({ guest }: { guest: Guest }) {
   const attending = guest.rsvp_status === 'attending'
+  const isFamily = guest.invitation_type === 'family'
 
   const attendees: Attendee[] = []
-  if (attending) {
+  if (attending && !isFamily) {
     attendees.push({ name: guest.name, phone: guest.phone, dietary: guest.dietary_restrictions })
   }
   for (const p of guest.plus_ones ?? []) {
