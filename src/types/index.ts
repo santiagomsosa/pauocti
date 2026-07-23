@@ -55,6 +55,7 @@ export interface PlusOneInput {
 export interface RsvpSubmitPayload {
   rsvp_status: 'attending' | 'declined'
   phone: string
+  email: string
   dietary_restrictions: string
   plus_ones: PlusOneInput[]
 }

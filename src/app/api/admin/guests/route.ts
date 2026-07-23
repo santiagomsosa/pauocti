@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
         invitation_type,
         max_plus_ones,
         plus_ones_preload,
-        is_active: !isFamily,
+        is_active: true,
         invite_token: generateInviteToken(),
       })
       .select()

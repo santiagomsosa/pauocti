@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Trash2, Plus, Loader2, Mail, Phone, Pencil, Check, X, Send, Link2 } from 'lucide-react'
+import { Trash2, Plus, Loader2, Mail, Phone, Pencil, Check, X, Send, Link2, Download } from 'lucide-react'
 import type { Guest, InvitationType, PlusOnePreload } from '@/types'
 
 function PreloadEditor({
@@ -101,7 +101,12 @@ function isMobileDevice(): boolean {
 function shareViaWhatsapp(guest: Guest) {
   if (!guest.invite_token) return
   const url = `${window.location.origin}/invitacion/${guest.invite_token}`
-  const text = `¡Hola ${guest.name}! Te invitamos a nuestra boda. Podés ver tu invitación y confirmar tu asistencia acá: ${url}`
+  const displayName = guest.invitation_type === 'family' && !/^familia\b/i.test(guest.name)
+    ? `familia ${guest.name}`
+    : guest.name
+  const text = guest.invitation_type === 'family'
+    ? `¡Hola ${displayName}! Los invitamos a nuestra boda. Pueden ver su invitación y confirmar su asistencia acá: ${url}`
+    : `¡Hola ${guest.name}! Te invitamos a nuestra boda. Podés ver tu invitación y confirmar tu asistencia acá: ${url}`
 
   if (navigator.share && isMobileDevice()) {
     navigator.share({ text }).catch(() => {})
@@ -124,16 +129,64 @@ function copyInviteLink(guest: Guest) {
   )
 }
 
-const STATUS_LABEL: Record<Guest['rsvp_status'], string> = {
+const STATUS_VARIANT: Record<Guest['rsvp_status'], string> = {
+  pending: 'bg-stone-100 text-stone-500',
+  attending: 'bg-sage-100 text-sage-600',
+  declined: 'bg-rose-100 text-rose-600',
+}
+
+const STATUS_LABEL_ES: Record<Guest['rsvp_status'], string> = {
   pending: 'Pendiente',
   attending: 'Asiste',
   declined: 'No asiste',
 }
 
-const STATUS_VARIANT: Record<Guest['rsvp_status'], string> = {
-  pending: 'bg-stone-100 text-stone-500',
-  attending: 'bg-sage-100 text-sage-600',
-  declined: 'bg-rose-100 text-rose-600',
+function csvEscape(value: string | null | undefined): string {
+  const str = value ?? ''
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return `"${str.replace(/"/g, '""')}"`
+  }
+  return str
+}
+
+function exportGuestsCsv(guests: Guest[]) {
+  const headers = ['Nombre', 'Tipo', 'Estado', 'Email', 'Teléfono', 'Restricciones alimentarias', 'Integrante de']
+  const rows: string[][] = []
+
+  for (const g of guests) {
+    rows.push([
+      g.name,
+      g.invitation_type === 'family' ? 'Familia' : 'Individual',
+      STATUS_LABEL_ES[g.rsvp_status],
+      g.email ?? '',
+      g.phone ?? '',
+      g.dietary_restrictions ?? '',
+      '',
+    ])
+    for (const p of g.plus_ones ?? []) {
+      rows.push([
+        p.name,
+        g.invitation_type === 'family' ? 'Integrante de familia' : '+1',
+        STATUS_LABEL_ES[p.rsvp_status],
+        p.email ?? '',
+        p.phone ?? '',
+        p.dietary_restrictions ?? '',
+        g.name,
+      ])
+    }
+  }
+
+  const csv =
+    '﻿' +
+    [headers, ...rows].map((row) => row.map(csvEscape).join(',')).join('\n')
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `invitados-${new Date().toISOString().slice(0, 10)}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 interface GuestsTabProps {
@@ -277,33 +330,6 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
     setBusyId(null)
   }
 
-  async function toggleActive(guest: Guest, parentId?: string) {
-    setBusyId(guest.id)
-    const res = await fetch('/api/admin/guests', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: guest.id, is_active: !guest.is_active }),
-    })
-    const data = await res.json()
-    if (res.ok) {
-      setGuests((prev) =>
-        prev.map((g) => {
-          if (parentId && g.id === parentId) {
-            return {
-              ...g,
-              plus_ones: g.plus_ones?.map((p) => (p.id === guest.id ? { ...p, ...data.guest } : p)),
-            }
-          }
-          return g.id === guest.id ? { ...g, ...data.guest } : g
-        })
-      )
-      toast.success(data.guest.is_active ? 'Acceso activado' : 'Acceso desactivado')
-    } else {
-      toast.error(data.error)
-    }
-    setBusyId(null)
-  }
-
   async function sendInvitation(id: string) {
     setBusyId(id)
     const res = await fetch('/api/admin/invitation/send', {
@@ -414,6 +440,22 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
         </Button>
       </form>
 
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-stone-400">
+          {guests.length} invitado{guests.length !== 1 ? 's' : ''}
+          {' · '}
+          {guests.filter((g) => g.rsvp_status === 'attending').length} confirman
+          {' · '}
+          {guests.filter((g) => g.rsvp_status === 'pending').length} pendientes
+        </p>
+        {guests.length > 0 && (
+          <Button size="sm" variant="outline" onClick={() => exportGuestsCsv(guests)}>
+            <Download className="w-3.5 h-3.5 mr-1.5" />
+            Exportar Excel
+          </Button>
+        )}
+      </div>
+
       <div className="bg-white rounded-xl shadow-sm divide-y">
         {guests.length === 0 ? (
           <p className="p-4 text-sm text-stone-400 text-center">No hay invitados aún</p>
@@ -428,7 +470,7 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
                       <Badge className="text-[10px] px-1.5 py-0 h-4 bg-ink-100 text-ink-600">Familia</Badge>
                     )}
                     <Badge className={`text-[10px] px-1.5 py-0 h-4 ${STATUS_VARIANT[g.rsvp_status]}`}>
-                      {STATUS_LABEL[g.rsvp_status]}
+                      {STATUS_LABEL_ES[g.rsvp_status]}
                     </Badge>
                   </div>
                   {g.invitation_type !== 'family' && (
@@ -610,17 +652,6 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
                           className="text-stone-300 hover:text-green-500 disabled:opacity-30 transition-colors"
                         >
                           <WhatsappIcon className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => toggleActive(p, g.id)}
-                          disabled={busyId === p.id}
-                          className={`text-xs font-medium px-2.5 py-1 rounded-full transition-colors ${
-                            p.is_active
-                              ? 'bg-sage-100 text-sage-600 hover:bg-sage-200'
-                              : 'bg-stone-200 text-stone-500 hover:bg-stone-300'
-                          }`}
-                        >
-                          {p.is_active ? 'Activo' : 'Activar'}
                         </button>
                       </div>
                     </div>

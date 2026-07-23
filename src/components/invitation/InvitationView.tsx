@@ -31,8 +31,8 @@ function FloatingIcon({
 
 function formatShortDate(iso: string): string {
   const d = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${String(d.getFullYear()).slice(-2)}`
+  return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+    .replace(/de (\w)/, (_, c) => `de ${c.toUpperCase()}`)
 }
 
 function buildFields(items: Array<[string, string | null]>) {
@@ -194,9 +194,9 @@ export function InvitationView({ guest: initialGuest, settings }: { guest: Guest
           >
             {dateLabel && <p className="text-lg tracking-[0.2em] text-rose-400">{dateLabel}</p>}
             <p className="text-lg text-stone-600">
-              Invitación para{' '}
-              {guest.invitation_type === 'family' && !/^familia\b/i.test(guest.name) && 'la familia '}
-              <span className="font-medium text-stone-800">{guest.name}</span>
+              {guest.invitation_type === 'family'
+                ? <>Hola familia <span className="font-medium text-stone-800">{guest.name}</span></>
+                : <>Hola, <span className="font-medium text-stone-800">{guest.name}</span></>}
             </p>
             <p className="text-sm text-stone-500 max-w-xs mx-auto leading-relaxed">
               ¡Cada vez falta menos! Nos alegra muchísimo que seas parte de este día.

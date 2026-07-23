@@ -35,6 +35,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
   const isFamily = guest.invitation_type === 'family'
   const [attending, setAttending] = useState<'attending' | 'declined' | null>(null)
   const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
   const [dietary, setDietary] = useState('')
   const [plusOnes, setPlusOnes] = useState<PlusOneInput[]>(() => preloadedPlusOnes(guest, isFamily))
   const [loading, setLoading] = useState(false)
@@ -63,6 +64,24 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
       return
     }
 
+    const needsContactInfo = isFamily || attending === 'attending'
+    if (needsContactInfo && !phone.trim()) {
+      toast.error('El teléfono es obligatorio')
+      return
+    }
+    if (needsContactInfo && !email.trim()) {
+      toast.error('El correo es obligatorio')
+      return
+    }
+    if (plusOnes.some((p) => p.rsvp_status === 'attending' && !p.phone.trim())) {
+      toast.error(isFamily ? 'El teléfono de cada integrante que asiste es obligatorio' : 'El teléfono de cada acompañante es obligatorio')
+      return
+    }
+    if (plusOnes.some((p) => p.rsvp_status === 'attending' && !p.email.trim())) {
+      toast.error(isFamily ? 'El correo de cada integrante que asiste es obligatorio' : 'El correo de cada acompañante es obligatorio')
+      return
+    }
+
     const rsvpStatus = isFamily
       ? plusOnes.some((p) => p.rsvp_status === 'attending')
         ? 'attending'
@@ -77,6 +96,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
         body: JSON.stringify({
           rsvp_status: rsvpStatus,
           phone,
+          email,
           dietary_restrictions: dietary,
           plus_ones: plusOnes,
         }),
@@ -147,18 +167,33 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
       </div>
 
       {(isFamily || attending === 'attending') && (
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-stone-700">
-            {isFamily ? 'Teléfono de contacto' : 'Tu teléfono'}
-          </label>
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            disabled={loading}
-            placeholder="Ej: 11 1234 5678"
-            className={inputClass}
-          />
+        <div className="space-y-2">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-stone-700">
+              {isFamily ? 'Teléfono de contacto' : 'Tu teléfono'} <span className="text-rose-400">*</span>
+            </label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              disabled={loading}
+              placeholder="Ej: 11 1234 5678"
+              className={inputClass}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-stone-700">
+              {isFamily ? 'Correo de contacto' : 'Tu correo'} <span className="text-rose-400">*</span>
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              placeholder="Ej: nombre@email.com"
+              className={inputClass}
+            />
+          </div>
         </div>
       )}
 
@@ -229,7 +264,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
                 />
                 <input
                   type="email"
-                  placeholder="Correo (opcional)"
+                  placeholder={p.rsvp_status === 'attending' ? 'Correo *' : 'Correo (opcional)'}
                   value={p.email}
                   onChange={(e) => updatePlusOne(i, { email: e.target.value })}
                   disabled={loading}
@@ -237,7 +272,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
                 />
                 <input
                   type="tel"
-                  placeholder="Teléfono (opcional)"
+                  placeholder={p.rsvp_status === 'attending' ? 'Teléfono *' : 'Teléfono (opcional)'}
                   value={p.phone}
                   onChange={(e) => updatePlusOne(i, { phone: e.target.value })}
                   disabled={loading}
