@@ -1,9 +1,9 @@
 -- Elimina desafíos duplicados, conservando el registro más antiguo de cada título
 delete from public.challenges
 where id not in (
-  select min(id)
+  select distinct on (title) id
   from public.challenges
-  group by title
+  order by title, created_at asc
 );
 
 -- Garantiza que no se puedan insertar duplicados en el futuro
