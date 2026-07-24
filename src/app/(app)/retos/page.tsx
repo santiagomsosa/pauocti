@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import { toast } from 'sonner'
-import { Trophy, Camera, ChevronDown, ChevronUp } from 'lucide-react'
+import { Trophy, Camera, ChevronDown, ChevronUp, Search, X, CheckCircle2 } from 'lucide-react'
 import { PhotoUploadModal } from '@/components/PhotoUploadModal'
+import { ChallengesProgress } from '@/components/ChallengesProgress'
 import { Badge } from '@/components/ui/badge'
 import { HandDrawnUnderline } from '@/components/decorations'
 import type { Challenge, Photo } from '@/types'
@@ -47,11 +48,19 @@ function ChallengeCard({
               <p className="text-sm text-stone-500 mt-0.5">{challenge.description}</p>
             </div>
           </div>
-          {(challenge.photo_count ?? 0) > 0 && (
-            <Badge className="bg-ink-100 text-ink-600 border-0 flex-shrink-0">
-              {challenge.photo_count} foto{(challenge.photo_count ?? 0) !== 1 ? 's' : ''}
-            </Badge>
-          )}
+          <div className="flex flex-col items-end gap-1 flex-shrink-0">
+            {challenge.completed_by_me && (
+              <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
+                <CheckCircle2 className="w-3 h-3" />
+                ¡Listo!
+              </span>
+            )}
+            {(challenge.photo_count ?? 0) > 0 && (
+              <Badge className="bg-ink-100 text-ink-600 border-0">
+                {challenge.photo_count} foto{(challenge.photo_count ?? 0) !== 1 ? 's' : ''}
+              </Badge>
+            )}
+          </div>
         </div>
 
         <div className="flex gap-2">
@@ -103,23 +112,40 @@ function ChallengeCard({
 
 export default function RetosPage() {
   const [challenges, setChallenges] = useState<Challenge[]>([])
+  const [completedCount, setCompletedCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [uploadChallenge, setUploadChallenge] = useState<Challenge | null>(null)
+  const [query, setQuery] = useState('')
+
+  function loadChallenges() {
+    return fetch('/api/challenges')
+      .then((r) => r.json())
+      .then((d) => {
+        setChallenges(d.challenges ?? [])
+        setCompletedCount(d.completedCount ?? 0)
+      })
+  }
 
   useEffect(() => {
-    fetch('/api/challenges')
-      .then((r) => r.json())
-      .then((d) => setChallenges(d.challenges ?? []))
+    loadChallenges()
       .catch(() => toast.error('Error al cargar los desafíos'))
       .finally(() => setLoading(false))
   }, [])
 
   function handleUploaded() {
-    // Recargar challenges para actualizar contadores
-    fetch('/api/challenges')
-      .then((r) => r.json())
-      .then((d) => setChallenges(d.challenges ?? []))
+    loadChallenges()
   }
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return challenges
+    return challenges.filter(
+      (c) =>
+        c.title.toLowerCase().includes(q) ||
+        c.description.toLowerCase().includes(q) ||
+        c.emoji.includes(q),
+    )
+  }, [challenges, query])
 
   return (
     <div className="py-6 space-y-4">
@@ -128,6 +154,31 @@ export default function RetosPage() {
         <HandDrawnUnderline className="w-14 h-3 text-sage-400 -mt-1" />
         <p className="text-sm text-stone-500 mt-1">Completá los desafíos fotográficos</p>
       </div>
+
+      {!loading && (
+        <ChallengesProgress completed={completedCount} total={challenges.length} />
+      )}
+
+      {!loading && challenges.length > 0 && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar desafío..."
+            className="w-full rounded-xl border border-stone-200 bg-white py-2.5 pl-9 pr-9 text-sm outline-none focus:border-ink-300 focus:ring-2 focus:ring-ink-100"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      )}
 
       {loading ? (
         <div className="space-y-3">
@@ -141,9 +192,22 @@ export default function RetosPage() {
           <p className="text-stone-500">Todavía no hay desafíos cargados</p>
           <p className="text-xs text-stone-400">Los organizadores los agregarán pronto</p>
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center py-12 space-y-2 text-center">
+          <Search className="w-8 h-8 text-stone-300" />
+          <p className="text-stone-500 text-sm">Sin resultados para "{query}"</p>
+          <button onClick={() => setQuery('')} className="text-ink-500 text-sm font-medium">
+            Ver todos
+          </button>
+        </div>
       ) : (
         <div className="space-y-3">
-          {challenges.map((c) => (
+          {query && (
+            <p className="text-xs text-stone-400">
+              {filtered.length} de {challenges.length} desafíos
+            </p>
+          )}
+          {filtered.map((c) => (
             <ChallengeCard key={c.id} challenge={c} onUpload={setUploadChallenge} />
           ))}
         </div>

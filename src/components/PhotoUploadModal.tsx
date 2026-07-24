@@ -2,8 +2,9 @@
 
 import { useState, useRef } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { toast } from 'sonner'
-import { Upload, X, Loader2, ImageIcon } from 'lucide-react'
+import { Upload, X, Loader2, ImageIcon, Trophy } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import type { Challenge, Photo } from '@/types'
@@ -13,10 +14,9 @@ interface Props {
   onClose: () => void
   onUploaded: (photo: Photo) => void
   challenge?: Challenge | null
-  challenges?: Challenge[]
 }
 
-export function PhotoUploadModal({ open, onClose, onUploaded, challenge, challenges }: Props) {
+export function PhotoUploadModal({ open, onClose, onUploaded, challenge }: Props) {
   const [preview, setPreview] = useState<string | null>(null)
   const [file, setFile] = useState<File | null>(null)
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(
@@ -75,22 +75,22 @@ export function PhotoUploadModal({ open, onClose, onUploaded, challenge, challen
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
-      <DialogContent className="max-w-sm mx-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-sm mx-auto max-h-[90dvh] flex flex-col overflow-hidden">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>
             {challenge ? `Reto: ${challenge.emoji} ${challenge.title}` : 'Subir foto'}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto space-y-4 pr-0.5">
           {/* Área de selección de imagen */}
           <div
             onClick={() => inputRef.current?.click()}
-            className="relative border-2 border-dashed border-ink-200 rounded-xl overflow-hidden cursor-pointer hover:border-ink-300 transition-colors bg-cream-50 aspect-square flex items-center justify-center"
+            className="relative border-2 border-dashed border-ink-200 rounded-xl overflow-hidden cursor-pointer hover:border-ink-300 transition-colors bg-cream-50 h-48 flex items-center justify-center"
           >
             {preview ? (
               <>
-                <Image src={preview} alt="Preview" fill className="object-cover" />
+                <Image src={preview} alt="Preview" fill className="object-contain" />
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
@@ -118,38 +118,20 @@ export function PhotoUploadModal({ open, onClose, onUploaded, challenge, challen
             onChange={handleFileChange}
           />
 
-          {/* Selector de reto (si se pasan challenges opcionales) */}
-          {!challenge && challenges && challenges.length > 0 && (
-            <div className="space-y-1.5">
-              <p className="text-sm font-medium text-stone-700">¿Es para un reto? (opcional)</p>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setSelectedChallengeId(null)}
-                  className={`text-xs px-3 py-1 rounded-full border transition-colors ${
-                    !selectedChallengeId
-                      ? 'bg-ink-500 text-white border-ink-500'
-                      : 'border-stone-200 text-stone-500 hover:border-ink-200'
-                  }`}
-                >
-                  Sin reto
-                </button>
-                {challenges.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => setSelectedChallengeId(c.id)}
-                    className={`text-xs px-3 py-1 rounded-full border transition-colors ${
-                      selectedChallengeId === c.id
-                        ? 'bg-ink-500 text-white border-ink-500'
-                        : 'border-stone-200 text-stone-500 hover:border-ink-200'
-                    }`}
-                  >
-                    {c.emoji} {c.title}
-                  </button>
-                ))}
-              </div>
-            </div>
+          {/* Link a desafíos */}
+          {!challenge && (
+            <Link
+              href="/retos"
+              onClick={handleClose}
+              className="flex items-center justify-between rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-600 hover:bg-stone-100 transition-colors"
+            >
+              <span>¿Es para un desafío? Ir a desafíos</span>
+              <Trophy className="w-4 h-4 text-ink-400 flex-shrink-0" />
+            </Link>
           )}
+        </div>
 
+        <div className="flex-shrink-0 pt-2">
           <Button
             onClick={handleUpload}
             disabled={!file || loading}

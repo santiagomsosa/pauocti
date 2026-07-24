@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Camera, ChevronRight, Images, Music } from 'lucide-react'
 import { PhotoUploadModal } from '@/components/PhotoUploadModal'
+import { ChallengesProgress } from '@/components/ChallengesProgress'
 import { HandDrawnUnderline } from '@/components/decorations'
 import type { Challenge, Message } from '@/types'
 
@@ -39,11 +40,12 @@ function HomeChallengeCard({
 interface Props {
   guestName: string
   challenges: Challenge[]
+  completedCount: number
   messages: Message[]
   photoCount: number
 }
 
-export function HomeContent({ guestName, challenges, messages, photoCount }: Props) {
+export function HomeContent({ guestName, challenges, completedCount, messages, photoCount }: Props) {
   const [uploadChallenge, setUploadChallenge] = useState<Challenge | null>(null)
 
   const firstName = guestName.split(' ')[0]
@@ -63,6 +65,7 @@ export function HomeContent({ guestName, challenges, messages, photoCount }: Pro
         <h2 className="font-semibold text-stone-700">
           Tenemos unos desafíos para vos esta noche 😏
         </h2>
+        <ChallengesProgress completed={completedCount} total={challenges.length} />
 
         {featuredChallenges.length === 0 ? (
           <p className="text-sm text-stone-400">Próximamente...</p>
