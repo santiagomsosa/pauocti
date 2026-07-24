@@ -74,6 +74,7 @@ export interface Challenge {
   emoji: string
   created_at: string
   photo_count?: number
+  completed_by_me?: boolean
 }
 
 export interface Photo {

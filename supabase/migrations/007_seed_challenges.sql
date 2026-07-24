@@ -1,4 +1,4 @@
--- Seed de desafíos fotográficos
+-- Seed de desafíos fotográficos (ON CONFLICT evita duplicados si se corre más de una vez)
 insert into public.challenges (title, description, emoji) values
   ('Sacate una foto con un pelado', 'Dicen que los pelados traen suerte. ¿Será verdad?', '🧢'),
   ('Sacate una foto con un jugador del B.U.F.C.', 'Encontrá a uno de los cracks del equipo.', '⚽'),
@@ -20,4 +20,5 @@ insert into public.challenges (title, description, emoji) values
   ('Sacate una foto brindando con alguien que acabás de conocer', 'Un brindis vale más si es con alguien nuevo.', '🥂'),
   ('Sacate una foto imitando la pose de los novios en la torta', 'A ver quién la clava mejor.', '🎂'),
   ('Sacate una foto con el ramo de la novia', 'Antes o después de que lo tiren, ¡vale igual!', '💐'),
-  ('Sacate una selfie con la mayor cantidad de gente posible en un solo cuadro', 'Cuantos más, mejor la foto grupal.', '🤳');
+  ('Sacate una selfie con la mayor cantidad de gente posible en un solo cuadro', 'Cuantos más, mejor la foto grupal.', '🤳')
+on conflict (title) do nothing;

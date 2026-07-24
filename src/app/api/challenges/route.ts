@@ -18,20 +18,30 @@ export async function GET() {
     return NextResponse.json({ error: 'Error al cargar retos' }, { status: 500 })
   }
 
-  // Contar fotos por reto
-  const { data: counts } = await supabase
-    .from('photos')
-    .select('challenge_id')
-    .not('challenge_id', 'is', null)
+  // Contar fotos por reto (todas) y fotos del invitado actual
+  const [{ data: counts }, { data: mine }] = await Promise.all([
+    supabase.from('photos').select('challenge_id').not('challenge_id', 'is', null),
+    supabase
+      .from('photos')
+      .select('challenge_id')
+      .eq('guest_id', session.guestId)
+      .not('challenge_id', 'is', null),
+  ])
 
   const countMap: Record<string, number> = {}
   for (const row of counts ?? []) {
-    if (row.challenge_id) {
-      countMap[row.challenge_id] = (countMap[row.challenge_id] ?? 0) + 1
-    }
+    if (row.challenge_id) countMap[row.challenge_id] = (countMap[row.challenge_id] ?? 0) + 1
   }
 
-  const result = challenges.map((c) => ({ ...c, photo_count: countMap[c.id] ?? 0 }))
+  const completedSet = new Set((mine ?? []).map((r) => r.challenge_id))
 
-  return NextResponse.json({ challenges: result })
+  const result = challenges.map((c) => ({
+    ...c,
+    photo_count: countMap[c.id] ?? 0,
+    completed_by_me: completedSet.has(c.id),
+  }))
+
+  const completedCount = completedSet.size
+
+  return NextResponse.json({ challenges: result, completedCount })
 }
