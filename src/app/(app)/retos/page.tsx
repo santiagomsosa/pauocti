@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { toast } from 'sonner'
 import { Trophy, Camera, ChevronDown, ChevronUp, Search, X, CheckCircle2 } from 'lucide-react'
 import { PhotoUploadModal } from '@/components/PhotoUploadModal'
+import { ChallengesProgress } from '@/components/ChallengesProgress'
 import { Badge } from '@/components/ui/badge'
 import { HandDrawnUnderline } from '@/components/decorations'
 import type { Challenge, Photo } from '@/types'
@@ -148,21 +149,15 @@ export default function RetosPage() {
 
   return (
     <div className="py-6 space-y-4">
-      <div className="flex items-end justify-between">
-        <div>
-          <h1 className="font-script text-3xl text-stone-800">Desafíos</h1>
-          <HandDrawnUnderline className="w-14 h-3 text-sage-400 -mt-1" />
-          <p className="text-sm text-stone-500 mt-1">Completá los desafíos fotográficos</p>
-        </div>
-        {!loading && completedCount > 0 && (
-          <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 rounded-full px-3 py-1.5 mb-1">
-            <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-            <span className="text-sm font-medium text-green-700">
-              {completedCount}/{challenges.length}
-            </span>
-          </div>
-        )}
+      <div>
+        <h1 className="font-script text-3xl text-stone-800">Desafíos</h1>
+        <HandDrawnUnderline className="w-14 h-3 text-sage-400 -mt-1" />
+        <p className="text-sm text-stone-500 mt-1">Completá los desafíos fotográficos</p>
       </div>
+
+      {!loading && (
+        <ChallengesProgress completed={completedCount} total={challenges.length} />
+      )}
 
       {!loading && challenges.length > 0 && (
         <div className="relative">
