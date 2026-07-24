@@ -4,16 +4,18 @@ import { generateInviteToken, generateUniqueGuestCode } from '@/lib/invite'
 import { z } from 'zod'
 import type { Guest } from '@/types'
 
+const optionalStr = (max: number) => z.string().max(max).trim().optional()
+
 const plusOnePreloadSchema = z.object({
   name: z.string().min(1).max(100).trim(),
-  email: z.string().email().max(200).trim().optional().or(z.literal('')),
-  phone: z.string().min(6).max(30).trim(),
+  email: optionalStr(200),
+  phone: optionalStr(30),
 })
 
 const guestSchema = z.object({
   name: z.string().min(1).max(100).trim(),
-  email: z.string().email().max(200).trim().optional().or(z.literal('')),
-  phone: z.string().min(6).max(30).trim(),
+  email: optionalStr(200),
+  phone: z.string().min(1).max(30).trim(),
   invitation_type: z.enum(['individual', 'family']).default('individual'),
   max_plus_ones: z.coerce.number().int().min(0).max(10).default(0),
   plus_ones_preload: z.array(plusOnePreloadSchema).max(10).default([]),
@@ -21,12 +23,16 @@ const guestSchema = z.object({
 
 const patchSchema = z.object({
   id: z.string().uuid(),
-  email: z.string().email().max(200).trim().optional().or(z.literal('')).nullable(),
-  phone: z.string().min(6).max(30).trim().optional(),
+  name: z.string().min(1).max(100).trim().optional(),
+  email: optionalStr(200).nullable(),
+  phone: optionalStr(30),
   invitation_type: z.enum(['individual', 'family']).optional(),
   max_plus_ones: z.coerce.number().int().min(0).max(10).optional(),
   is_active: z.boolean().optional(),
   plus_ones_preload: z.array(plusOnePreloadSchema).max(10).optional(),
+  table_id: z.string().uuid().nullable().optional(),
+  dietary_restrictions: optionalStr(500),
+  rsvp_status: z.enum(['attending', 'declined', 'pending']).optional(),
 })
 
 export async function GET() {
@@ -76,7 +82,7 @@ export async function POST(request: NextRequest) {
         invitation_type,
         max_plus_ones,
         plus_ones_preload,
-        is_active: !isFamily,
+        is_active: true,
         invite_token: generateInviteToken(),
       })
       .select()
@@ -97,16 +103,20 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json()
-    const { id, email, phone, invitation_type, max_plus_ones, is_active, plus_ones_preload } =
+    const { id, name, email, phone, invitation_type, max_plus_ones, is_active, plus_ones_preload, table_id, dietary_restrictions, rsvp_status } =
       patchSchema.parse(body)
 
     const update: Record<string, unknown> = {}
+    if (name !== undefined) update.name = name
     if (email !== undefined) update.email = email || null
-    if (phone !== undefined) update.phone = phone
+    if (phone !== undefined) update.phone = phone || null
     if (invitation_type !== undefined) update.invitation_type = invitation_type
     if (max_plus_ones !== undefined) update.max_plus_ones = max_plus_ones
     if (is_active !== undefined) update.is_active = is_active
     if (plus_ones_preload !== undefined) update.plus_ones_preload = plus_ones_preload
+    if (table_id !== undefined) update.table_id = table_id || null
+    if (dietary_restrictions !== undefined) update.dietary_restrictions = dietary_restrictions || null
+    if (rsvp_status !== undefined) update.rsvp_status = rsvp_status
 
     if (Object.keys(update).length === 0) {
       return NextResponse.json({ error: 'Nada para actualizar' }, { status: 400 })

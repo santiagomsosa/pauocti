@@ -12,10 +12,8 @@ const schema = z.object({
   venue_address: z.string().max(300).trim().optional().or(z.literal('')),
   venue_map_url: z.string().max(500).trim().optional().or(z.literal('')),
   bank_ars_account: z.string().max(60).trim().optional().or(z.literal('')),
-  bank_ars_alias: z.string().max(60).trim().optional().or(z.literal('')),
   bank_ars_cbu: z.string().max(40).trim().optional().or(z.literal('')),
   bank_usd_account: z.string().max(60).trim().optional().or(z.literal('')),
-  bank_usd_alias: z.string().max(60).trim().optional().or(z.literal('')),
   bank_usd_cbu: z.string().max(40).trim().optional().or(z.literal('')),
 })
 

@@ -25,5 +25,21 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
 
   const settings = await getSettings()
 
-  return <InvitationView guest={{ ...guest, plus_ones: plusOnes ?? [] } as Guest} settings={settings} />
+  let tableName: string | null = null
+  if (guest.table_id) {
+    const { data: tableData } = await supabase
+      .from('wedding_tables')
+      .select('name')
+      .eq('id', guest.table_id)
+      .single()
+    tableName = tableData?.name ?? null
+  }
+
+  return (
+    <InvitationView
+      guest={{ ...guest, plus_ones: plusOnes ?? [] } as Guest}
+      settings={settings}
+      tableName={tableName}
+    />
+  )
 }

@@ -31,15 +31,10 @@ function FloatingIcon({
 
 function formatShortDate(iso: string): string {
   const d = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${String(d.getFullYear()).slice(-2)}`
+  return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+    .replace(/de (\w)/, (_, c) => `de ${c.toUpperCase()}`)
 }
 
-function buildFields(items: Array<[string, string | null]>) {
-  return items
-    .filter(([, value]) => Boolean(value))
-    .map(([label, value]) => ({ label, value: value as string }))
-}
 
 function CoupleNames({ names }: { names: string }) {
   const parts = names.split(/\s*&\s*/)
@@ -118,7 +113,24 @@ function CopyField({ label, value }: { label: string; value: string }) {
   )
 }
 
-export function InvitationView({ guest: initialGuest, settings }: { guest: Guest; settings: Settings }) {
+function StaticField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex w-full items-center justify-between gap-3 border-b border-stone-200/70 py-2">
+      <span className="font-title text-xs uppercase tracking-wide text-stone-400">{label}</span>
+      <span className="text-sm font-medium text-stone-700">{value}</span>
+    </div>
+  )
+}
+
+export function InvitationView({
+  guest: initialGuest,
+  settings,
+  tableName,
+}: {
+  guest: Guest
+  settings: Settings
+  tableName?: string | null
+}) {
   const [guest, setGuest] = useState(initialGuest)
   const coupleNames = settings.couple_names ?? 'Pau & Octi'
   const dateLabel = settings.wedding_datetime ? formatShortDate(settings.wedding_datetime) : null
@@ -129,17 +141,8 @@ export function InvitationView({ guest: initialGuest, settings }: { guest: Guest
   const yIconB = useTransform(scrollYProgress, [0, 1], [0, 160])
   const yIconC = useTransform(scrollYProgress, [0, 1], [0, -100])
 
-  const arsFields = buildFields([
-    ['Cuenta', settings.bank_ars_account],
-    ['Alias', settings.bank_ars_alias],
-    ['CBU', settings.bank_ars_cbu],
-  ])
-  const usdFields = buildFields([
-    ['Cuenta', settings.bank_usd_account],
-    ['Alias', settings.bank_usd_alias],
-    ['CBU', settings.bank_usd_cbu],
-  ])
-  const hasTransfer = arsFields.length > 0 || usdFields.length > 0
+  const hasTransfer = !!(settings.bank_ars_account || settings.bank_ars_cbu || settings.bank_usd_account || settings.bank_usd_cbu)
+  const isFamily = guest.invitation_type === 'family'
 
   function handleAgendar() {
     if (!settings.wedding_datetime) return
@@ -194,12 +197,13 @@ export function InvitationView({ guest: initialGuest, settings }: { guest: Guest
           >
             {dateLabel && <p className="text-lg tracking-[0.2em] text-rose-400">{dateLabel}</p>}
             <p className="text-lg text-stone-600">
-              Invitación para{' '}
-              {guest.invitation_type === 'family' && !/^familia\b/i.test(guest.name) && 'la familia '}
-              <span className="font-medium text-stone-800">{guest.name}</span>
+              {guest.invitation_type === 'family'
+                ? <>Hola familia <span className="font-medium text-stone-800">{guest.name}</span></>
+                : <>Hola, <span className="font-medium text-stone-800">{guest.name}</span></>}
             </p>
             <p className="text-sm text-stone-500 max-w-xs mx-auto leading-relaxed">
-              ¡Cada vez falta menos! Nos alegra muchísimo que seas parte de este día.
+              ¡Cada vez falta menos! Nos alegra muchísimo compartir este día con {isFamily ? 'ustedes' : 'vos'}.
+              {dateLabel && ` Acá ${isFamily ? 'van' : 'vas'} a encontrar toda la información para acompañarnos el ${dateLabel.toLowerCase()}.`}
             </p>
           </motion.div>
 
@@ -255,6 +259,22 @@ export function InvitationView({ guest: initialGuest, settings }: { guest: Guest
             />
           </motion.section>
 
+          {tableName && (
+            <motion.section
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.5 }}
+              className="text-center"
+            >
+              <div className="inline-block border border-sand-300 rounded-2xl px-10 py-6 bg-white/60 backdrop-blur-sm shadow-sm space-y-2">
+                <p className="font-title text-[10px] uppercase tracking-[0.2em] text-stone-400">Tu lugar en la fiesta</p>
+                <p className="font-script text-5xl text-ink-600 leading-tight">{tableName}</p>
+                <BotanicalDivider className="w-28 h-4 mx-auto opacity-60" />
+              </div>
+            </motion.section>
+          )}
+
           {guest.rsvp_submitted_at ? (
             <FrozenInvitation guest={guest} />
           ) : (
@@ -271,30 +291,29 @@ export function InvitationView({ guest: initialGuest, settings }: { guest: Guest
             >
               <p className="font-title text-2xl uppercase tracking-wide text-ink-600">Regalos</p>
               <p className="text-sm text-stone-500 max-w-xs mx-auto leading-relaxed">
-                Gracias por acompañarnos en este día tan especial, tu compañía es el mejor regalo para
-                nosotros. Si querés hacernos un obsequio, te dejamos algunas opciones.
+                {isFamily
+                  ? <>¡Gracias por acompañarnos en este día tan especial! Para nosotros, compartirlo con ustedes es el mejor regalo. No es necesario que nos hagan un obsequio, pero si desean hacerlo, lo vamos a agradecer muchísimo y lo recibiremos con mucho cariño. Acá abajo van a encontrar algunas opciones.</>
+                  : <>¡Gracias por acompañarnos en este día tan especial! Para nosotros, compartirlo con vos es el mejor regalo. No es necesario que nos hagas un obsequio, pero si querés hacerlo, lo vamos a agradecer muchísimo y lo recibiremos con mucho cariño. Acá abajo vas a encontrar algunas opciones.</>}
               </p>
               <div className="grid gap-6 sm:grid-cols-2 text-left">
-                {arsFields.length > 0 && (
+                {(settings.bank_ars_account || settings.bank_ars_cbu) && (
                   <div className="space-y-1">
                     <p className="font-title flex items-center gap-1.5 text-sm uppercase tracking-wide text-rose-500">
                       <GiftIcon className="w-4 h-4" />
                       Pesos
                     </p>
-                    {arsFields.map((f) => (
-                      <CopyField key={f.label} label={f.label} value={f.value} />
-                    ))}
+                    {settings.bank_ars_account && <StaticField label="Cuenta" value={settings.bank_ars_account} />}
+                    {settings.bank_ars_cbu && <CopyField label="CBU" value={settings.bank_ars_cbu} />}
                   </div>
                 )}
-                {usdFields.length > 0 && (
+                {(settings.bank_usd_account || settings.bank_usd_cbu) && (
                   <div className="space-y-1">
                     <p className="font-title flex items-center gap-1.5 text-sm uppercase tracking-wide text-rose-500">
                       <GiftIcon className="w-4 h-4" />
                       Dólares
                     </p>
-                    {usdFields.map((f) => (
-                      <CopyField key={f.label} label={f.label} value={f.value} />
-                    ))}
+                    {settings.bank_usd_account && <StaticField label="Cuenta" value={settings.bank_usd_account} />}
+                    {settings.bank_usd_cbu && <CopyField label="CBU" value={settings.bank_usd_cbu} />}
                   </div>
                 )}
               </div>
@@ -306,18 +325,28 @@ export function InvitationView({ guest: initialGuest, settings }: { guest: Guest
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }}
             transition={{ duration: 0.5 }}
+            className="text-center space-y-2"
+          >
+            <p className="font-title text-xs uppercase tracking-[0.25em] text-ink-500">Dress code</p>
+            <p className="font-title text-2xl uppercase tracking-wide text-ink-600">Formal</p>
+          </motion.section>
+
+          <motion.section
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.5 }}
             className="text-center space-y-3"
           >
             <p className="font-title text-xs uppercase tracking-[0.25em] text-sage-500">Acceso a la app</p>
-            {guest.invitation_type === 'family' ? (
+            {isFamily ? (
               <p className="text-sm text-stone-500 max-w-xs mx-auto leading-relaxed">
-                Cada integrante va a recibir su propio código para entrar a la app y ver la galería, subir
-                fotos y más.
+                ¡Entrá a la app para ver la galería, subir fotos, completar desafíos y más!
               </p>
             ) : (
               <>
                 <p className="text-sm text-stone-500">
-                  Entrá con este código para ver la galería, subir fotos y más
+                  ¡Entrá a la app para ver la galería, subir fotos, completar desafíos y más!
                 </p>
                 <div className="inline-block rounded-xl border-2 border-dashed border-ink-300 px-7 py-3">
                   <p className="font-mono text-2xl tracking-[0.3em] text-ink-600">{guest.code}</p>

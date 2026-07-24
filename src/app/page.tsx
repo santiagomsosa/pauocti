@@ -30,7 +30,7 @@ export default function LoginPage() {
         toast.error(data.error ?? 'Error al ingresar')
         return
       }
-      router.push('/galeria')
+      router.push('/inicio')
     } finally {
       setLoading(false)
     }

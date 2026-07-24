@@ -2,15 +2,28 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Images, Heart, Trophy, Music, LogOut } from 'lucide-react'
+import { Home, Images, Heart, Trophy, Music, LogOut } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { LeafSprig } from '@/components/decorations'
 
+function NavCoupleNames({ names }: { names: string }) {
+  const parts = names.split(/\s*&\s*/)
+  if (parts.length === 2) {
+    return (
+      <span>
+        {parts[0]}<span className="text-rose-400"> &amp; </span>{parts[1]}
+      </span>
+    )
+  }
+  return <span>{names}</span>
+}
+
 const tabs = [
+  { href: '/inicio', label: 'Inicio', icon: Home },
   { href: '/galeria', label: 'Galería', icon: Images },
   { href: '/muro', label: 'Muro', icon: Heart },
-  { href: '/retos', label: 'Retos', icon: Trophy },
+  { href: '/retos', label: 'Desafíos', icon: Trophy },
   { href: '/musica', label: 'Música', icon: Music },
 ]
 
@@ -32,8 +45,8 @@ export function Navbar({ guestName }: NavbarProps) {
     <>
       {/* Header top */}
       <header className="fixed top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-b border-cream-200 px-4 py-3 flex items-center justify-between">
-        <Link href="/galeria" className="flex items-center gap-1.5 font-script text-2xl text-stone-800">
-          {process.env.NEXT_PUBLIC_COUPLE_NAMES ?? 'Boda'}
+        <Link href="/inicio" className="flex items-center gap-1.5 font-script text-2xl text-stone-800">
+          <NavCoupleNames names={process.env.NEXT_PUBLIC_COUPLE_NAMES ?? 'Boda'} />
           <LeafSprig className="w-4 h-5 text-sage-400 -rotate-12" />
         </Link>
         <div className="flex items-center gap-3">

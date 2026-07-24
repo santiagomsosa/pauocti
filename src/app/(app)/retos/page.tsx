@@ -60,7 +60,7 @@ function ChallengeCard({
             className="flex items-center gap-1.5 bg-ink-500 hover:bg-ink-600 text-white text-sm px-3 py-1.5 rounded-full transition-colors font-medium"
           >
             <Camera className="w-3.5 h-3.5" />
-            Cumplir reto
+            Cumplir desafío
           </button>
 
           {(challenge.photo_count ?? 0) > 0 && (
@@ -110,7 +110,7 @@ export default function RetosPage() {
     fetch('/api/challenges')
       .then((r) => r.json())
       .then((d) => setChallenges(d.challenges ?? []))
-      .catch(() => toast.error('Error al cargar los retos'))
+      .catch(() => toast.error('Error al cargar los desafíos'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -124,9 +124,9 @@ export default function RetosPage() {
   return (
     <div className="py-6 space-y-4">
       <div>
-        <h1 className="font-script text-3xl text-stone-800">Retos</h1>
+        <h1 className="font-script text-3xl text-stone-800">Desafíos</h1>
         <HandDrawnUnderline className="w-14 h-3 text-sage-400 -mt-1" />
-        <p className="text-sm text-stone-500 mt-1">Completá los retos fotográficos</p>
+        <p className="text-sm text-stone-500 mt-1">Completá los desafíos fotográficos</p>
       </div>
 
       {loading ? (
@@ -138,7 +138,7 @@ export default function RetosPage() {
       ) : challenges.length === 0 ? (
         <div className="flex flex-col items-center py-16 space-y-3 text-center">
           <Trophy className="w-12 h-12 text-stone-300" />
-          <p className="text-stone-500">Todavía no hay retos cargados</p>
+          <p className="text-stone-500">Todavía no hay desafíos cargados</p>
           <p className="text-xs text-stone-400">Los organizadores los agregarán pronto</p>
         </div>
       ) : (
