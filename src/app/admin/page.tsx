@@ -11,10 +11,11 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
-import { Trash2, Plus, LogOut, Loader2, Users, Trophy, Images, Heart, Music, Settings as SettingsIcon } from 'lucide-react'
+import { Trash2, Plus, LogOut, Loader2, Users, Trophy, Images, Heart, Music, Settings as SettingsIcon, LayoutGrid } from 'lucide-react'
 import { GuestsTab } from '@/components/admin/GuestsTab'
 import { SettingsTab } from '@/components/admin/SettingsTab'
-import type { Guest, Challenge, Photo, Message, MusicRequest, Settings } from '@/types'
+import { TablesTab } from '@/components/admin/TablesTab'
+import type { Guest, Challenge, Photo, Message, MusicRequest, Settings, WeddingTable } from '@/types'
 
 const EMPTY_SETTINGS: Settings = {
   wedding_datetime: null,
@@ -26,10 +27,8 @@ const EMPTY_SETTINGS: Settings = {
   venue_address: null,
   venue_map_url: null,
   bank_ars_account: null,
-  bank_ars_alias: null,
   bank_ars_cbu: null,
   bank_usd_account: null,
-  bank_usd_alias: null,
   bank_usd_cbu: null,
 }
 
@@ -38,6 +37,9 @@ export default function AdminPage() {
 
   // Guests
   const [guests, setGuests] = useState<Guest[]>([])
+
+  // Tables
+  const [tables, setTables] = useState<WeddingTable[]>([])
 
   // Settings
   const [settings, setSettings] = useState<Settings>(EMPTY_SETTINGS)
@@ -58,13 +60,14 @@ export default function AdminPage() {
 
   const loadAll = useCallback(async () => {
     setLoading(true)
-    const [g, s, c, p, m, r] = await Promise.all([
+    const [g, s, c, p, m, r, t] = await Promise.all([
       fetch('/api/admin/guests').then((r) => r.json()),
       fetch('/api/admin/settings').then((r) => r.json()),
       fetch('/api/admin/challenges').then((r) => r.json()),
       fetch('/api/photos').then((r) => r.json()),
       fetch('/api/messages').then((r) => r.json()),
       fetch('/api/music').then((r) => r.json()),
+      fetch('/api/admin/tables').then((r) => r.json()),
     ])
     setGuests(g.guests ?? [])
     setSettings(s.settings ?? EMPTY_SETTINGS)
@@ -72,6 +75,7 @@ export default function AdminPage() {
     setPhotos(p.photos ?? [])
     setMessages(m.messages ?? [])
     setMusicRequests(r.requests ?? [])
+    setTables(t.tables ?? [])
     setLoading(false)
   }, [])
 
@@ -99,7 +103,7 @@ export default function AdminPage() {
       setNewTitle('')
       setNewDesc('')
       setNewEmoji('📸')
-      toast.success('Reto creado')
+      toast.success('Desafío creado')
     } else {
       toast.error(data.error)
     }
@@ -107,11 +111,11 @@ export default function AdminPage() {
   }
 
   async function deleteChallenge(id: string) {
-    if (!confirm('¿Eliminar este reto?')) return
+    if (!confirm('¿Eliminar este desafío?')) return
     const res = await fetch(`/api/admin/challenges?id=${id}`, { method: 'DELETE' })
     if (res.ok) {
       setChallenges((prev) => prev.filter((c) => c.id !== id))
-      toast.success('Reto eliminado')
+      toast.success('Desafío eliminado')
     }
   }
 
@@ -134,15 +138,20 @@ export default function AdminPage() {
           </div>
         ) : (
           <Tabs defaultValue="guests">
-            <TabsList className="grid grid-cols-6 mb-6 w-full">
+            <TabsList className="grid grid-cols-7 mb-6 w-full">
               <TabsTrigger value="guests" className="gap-1">
                 <Users className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Invitados</span>
                 <Badge className="text-[10px] px-1 py-0 h-4 ml-1">{guests.length}</Badge>
               </TabsTrigger>
+              <TabsTrigger value="tables" className="gap-1">
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Mesas</span>
+                <Badge className="text-[10px] px-1 py-0 h-4 ml-1">{tables.length}</Badge>
+              </TabsTrigger>
               <TabsTrigger value="challenges" className="gap-1">
                 <Trophy className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Retos</span>
+                <span className="hidden sm:inline">Desafíos</span>
               </TabsTrigger>
               <TabsTrigger value="photos" className="gap-1">
                 <Images className="w-3.5 h-3.5" />
@@ -167,7 +176,12 @@ export default function AdminPage() {
 
             {/* Invitados */}
             <TabsContent value="guests">
-              <GuestsTab guests={guests} setGuests={setGuests} />
+              <GuestsTab guests={guests} setGuests={setGuests} tables={tables} />
+            </TabsContent>
+
+            {/* Mesas */}
+            <TabsContent value="tables">
+              <TablesTab tables={tables} setTables={setTables} guests={guests} setGuests={setGuests} />
             </TabsContent>
 
             {/* Configuración */}
@@ -175,10 +189,10 @@ export default function AdminPage() {
               <SettingsTab settings={settings} setSettings={setSettings} />
             </TabsContent>
 
-            {/* Retos */}
+            {/* Desafíos */}
             <TabsContent value="challenges" className="space-y-4">
               <form onSubmit={addChallenge} className="bg-white rounded-xl p-4 shadow-sm space-y-3">
-                <h2 className="font-semibold text-stone-700">Crear reto</h2>
+                <h2 className="font-semibold text-stone-700">Crear desafío</h2>
                 <div className="flex gap-2">
                   <div className="space-y-1 w-20">
                     <Label>Emoji</Label>
@@ -211,13 +225,13 @@ export default function AdminPage() {
                   />
                 </div>
                 <Button type="submit" disabled={addingChallenge || !newTitle.trim() || !newDesc.trim()} size="sm">
-                  {addingChallenge ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4 mr-1" />Crear reto</>}
+                  {addingChallenge ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4 mr-1" />Crear desafío</>}
                 </Button>
               </form>
 
               <div className="space-y-2">
                 {challenges.length === 0 ? (
-                  <p className="text-sm text-stone-400 text-center py-4">No hay retos creados aún</p>
+                  <p className="text-sm text-stone-400 text-center py-4">No hay desafíos creados aún</p>
                 ) : (
                   challenges.map((c) => (
                     <div key={c.id} className="bg-white rounded-xl p-4 shadow-sm flex items-start justify-between gap-3">

@@ -30,10 +30,8 @@ export function SettingsTab({ settings, setSettings }: SettingsTabProps) {
   const [venueAddress, setVenueAddress] = useState(settings.venue_address ?? '')
   const [venueMapUrl, setVenueMapUrl] = useState(settings.venue_map_url ?? '')
   const [bankArsAccount, setBankArsAccount] = useState(settings.bank_ars_account ?? '')
-  const [bankArsAlias, setBankArsAlias] = useState(settings.bank_ars_alias ?? '')
   const [bankArsCbu, setBankArsCbu] = useState(settings.bank_ars_cbu ?? '')
   const [bankUsdAccount, setBankUsdAccount] = useState(settings.bank_usd_account ?? '')
-  const [bankUsdAlias, setBankUsdAlias] = useState(settings.bank_usd_alias ?? '')
   const [bankUsdCbu, setBankUsdCbu] = useState(settings.bank_usd_cbu ?? '')
   const [saving, setSaving] = useState(false)
   const [sendingReminder, setSendingReminder] = useState(false)
@@ -54,10 +52,8 @@ export function SettingsTab({ settings, setSettings }: SettingsTabProps) {
         venue_address: venueAddress.trim(),
         venue_map_url: venueMapUrl.trim(),
         bank_ars_account: bankArsAccount.trim(),
-        bank_ars_alias: bankArsAlias.trim(),
         bank_ars_cbu: bankArsCbu.trim(),
         bank_usd_account: bankUsdAccount.trim(),
-        bank_usd_alias: bankUsdAlias.trim(),
         bank_usd_cbu: bankUsdCbu.trim(),
       }),
     })
@@ -180,10 +176,6 @@ export function SettingsTab({ settings, setSettings }: SettingsTabProps) {
               <Input value={bankArsAccount} onChange={(e) => setBankArsAccount(e.target.value)} disabled={saving} />
             </div>
             <div className="space-y-1">
-              <Label>Alias</Label>
-              <Input value={bankArsAlias} onChange={(e) => setBankArsAlias(e.target.value)} disabled={saving} />
-            </div>
-            <div className="space-y-1">
               <Label>CBU</Label>
               <Input value={bankArsCbu} onChange={(e) => setBankArsCbu(e.target.value)} disabled={saving} />
             </div>
@@ -196,10 +188,6 @@ export function SettingsTab({ settings, setSettings }: SettingsTabProps) {
             <div className="space-y-1">
               <Label>Número de cuenta</Label>
               <Input value={bankUsdAccount} onChange={(e) => setBankUsdAccount(e.target.value)} disabled={saving} />
-            </div>
-            <div className="space-y-1">
-              <Label>Alias</Label>
-              <Input value={bankUsdAlias} onChange={(e) => setBankUsdAlias(e.target.value)} disabled={saving} />
             </div>
             <div className="space-y-1">
               <Label>CBU</Label>

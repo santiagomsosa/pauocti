@@ -2,6 +2,13 @@ export type RsvpStatus = 'pending' | 'attending' | 'declined'
 
 export type InvitationType = 'individual' | 'family'
 
+export interface WeddingTable {
+  id: string
+  name: string
+  capacity: number
+  created_at: string
+}
+
 export interface Guest {
   id: string
   name: string
@@ -18,6 +25,7 @@ export interface Guest {
   dietary_restrictions: string | null
   rsvp_submitted_at: string | null
   plus_ones_preload: PlusOnePreload[]
+  table_id: string | null
   plus_ones?: Guest[]
 }
 
@@ -37,10 +45,8 @@ export interface Settings {
   venue_address: string | null
   venue_map_url: string | null
   bank_ars_account: string | null
-  bank_ars_alias: string | null
   bank_ars_cbu: string | null
   bank_usd_account: string | null
-  bank_usd_alias: string | null
   bank_usd_cbu: string | null
 }
 
@@ -50,6 +56,7 @@ export interface PlusOneInput {
   phone: string
   rsvp_status: 'attending' | 'declined'
   dietary_restrictions: string
+  preloaded?: boolean
 }
 
 export interface RsvpSubmitPayload {

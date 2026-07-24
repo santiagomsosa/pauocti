@@ -25,6 +25,7 @@ function preloadedPlusOnes(guest: Guest, pad: boolean): PlusOneInput[] {
     phone: p.phone,
     rsvp_status: 'attending',
     dietary_restrictions: '',
+    preloaded: true,
   }))
   if (!pad) return preload
   while (preload.length < guest.max_plus_ones) preload.push(emptyPlusOne())
@@ -59,8 +60,16 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
       toast.error('Indicá si vas a asistir')
       return
     }
-    if (plusOnes.some((p) => !p.name.trim())) {
-      toast.error(isFamily ? 'Completá el nombre de todos los integrantes' : 'Completá el nombre de todos los acompañantes')
+    // Para familias, los integrantes que no asisten pueden dejarse sin datos
+    const attendingPlusOnes = isFamily
+      ? plusOnes.filter((p) => p.rsvp_status === 'attending' || p.name.trim())
+      : plusOnes
+
+    const needsName = isFamily
+      ? (p: typeof plusOnes[0]) => p.rsvp_status === 'attending'
+      : () => true
+    if (attendingPlusOnes.some((p) => needsName(p) && !p.name.trim())) {
+      toast.error(isFamily ? 'Completá el nombre de los integrantes que asisten' : 'Completá el nombre de todos los acompañantes')
       return
     }
 
@@ -73,17 +82,17 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
       toast.error('El correo es obligatorio')
       return
     }
-    if (plusOnes.some((p) => p.rsvp_status === 'attending' && !p.phone.trim())) {
+    if (attendingPlusOnes.some((p) => p.rsvp_status === 'attending' && !p.phone.trim())) {
       toast.error(isFamily ? 'El teléfono de cada integrante que asiste es obligatorio' : 'El teléfono de cada acompañante es obligatorio')
       return
     }
-    if (plusOnes.some((p) => p.rsvp_status === 'attending' && !p.email.trim())) {
+    if (attendingPlusOnes.some((p) => p.rsvp_status === 'attending' && !p.email.trim())) {
       toast.error(isFamily ? 'El correo de cada integrante que asiste es obligatorio' : 'El correo de cada acompañante es obligatorio')
       return
     }
 
     const rsvpStatus = isFamily
-      ? plusOnes.some((p) => p.rsvp_status === 'attending')
+      ? attendingPlusOnes.some((p) => p.rsvp_status === 'attending')
         ? 'attending'
         : 'declined'
       : (attending as 'attending' | 'declined')
@@ -98,7 +107,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
           phone,
           email,
           dietary_restrictions: dietary,
-          plus_ones: plusOnes,
+          plus_ones: attendingPlusOnes,
         }),
       })
       const data = await res.json()
@@ -124,12 +133,12 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
     >
       <div className="space-y-2 text-center">
         <p className="font-title text-xs uppercase tracking-[0.25em] text-ink-500">
-          {isFamily ? 'Confirmá la asistencia de tu familia' : 'Confirmá tu asistencia'}
+          Confirmá tu asistencia
         </p>
         <p className="text-stone-700 leading-relaxed">
           {isFamily
-            ? `${guest.name}, contanos quiénes de ustedes nos van a acompañar en este día tan especial`
-            : `${guest.name}, nos gustaría que nos acompañes en este día tan especial`}
+            ? `${guest.name}, nos encantaría compartir este día con ustedes`
+            : `${guest.name}, nos encantaría compartir este día con vos`}
         </p>
         {!isFamily && (
           <div className="grid grid-cols-2 gap-3 pt-1">
@@ -160,7 +169,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
                   : 'bg-transparent border-stone-300 text-stone-500 hover:border-stone-400'
               }`}
             >
-              No puedo ir
+              No voy a poder
             </button>
           </div>
         )}

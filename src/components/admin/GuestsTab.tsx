@@ -6,46 +6,29 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Trash2, Plus, Loader2, Mail, Phone, Pencil, Check, X, Send, Link2, Download } from 'lucide-react'
-import type { Guest, InvitationType, PlusOnePreload } from '@/types'
+import { Trash2, Plus, Loader2, Mail, Phone, Pencil, Check, X, Send, Link2, Download, RotateCcw } from 'lucide-react'
+import type { Guest, InvitationType, PlusOnePreload, WeddingTable } from '@/types'
 
 function PreloadEditor({
   label,
-  addLabel,
   preload,
   cap,
   disabled,
-  onAdd,
   onUpdate,
   onRemove,
 }: {
   label: string
-  addLabel: string
   preload: PlusOnePreload[]
   cap: number
   disabled: boolean
-  onAdd: () => void
   onUpdate: (index: number, patch: Partial<PlusOnePreload>) => void
   onRemove: (index: number) => void
 }) {
   return (
     <div className="space-y-2 pt-1">
-      <div className="flex items-center justify-between">
-        <Label className="text-xs">
-          {label} ({preload.length}/{cap})
-        </Label>
-        {preload.length < cap && (
-          <button
-            type="button"
-            onClick={onAdd}
-            disabled={disabled}
-            className="flex items-center gap-1 text-xs font-medium text-ink-500 hover:text-ink-600"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            {addLabel}
-          </button>
-        )}
-      </div>
+      <Label className="text-xs">
+        {label} ({preload.length}/{cap})
+      </Label>
       {preload.map((p, i) => (
         <div key={i} className="grid grid-cols-3 gap-2 items-start">
           <Input
@@ -64,11 +47,10 @@ function PreloadEditor({
           <div className="flex gap-1">
             <Input
               type="tel"
-              placeholder="Teléfono"
+              placeholder="Teléfono (opcional)"
               value={p.phone}
               onChange={(e) => onUpdate(i, { phone: e.target.value })}
               disabled={disabled}
-              required
             />
             <button
               type="button"
@@ -105,8 +87,8 @@ function shareViaWhatsapp(guest: Guest) {
     ? `familia ${guest.name}`
     : guest.name
   const text = guest.invitation_type === 'family'
-    ? `¡Hola ${displayName}! Los invitamos a nuestra boda. Pueden ver su invitación y confirmar su asistencia acá: ${url}`
-    : `¡Hola ${guest.name}! Te invitamos a nuestra boda. Podés ver tu invitación y confirmar tu asistencia acá: ${url}`
+    ? `¡Hola, ${displayName}! ¡Nos casamos!\nEn el siguiente link van a encontrar la invitación, toda la información del casamiento y la opción para confirmar su asistencia:\n\n${url}\n\n¡Esperamos que puedan acompañarnos!`
+    : `¡Hola, ${guest.name}! ¡Nos casamos!\nEn el siguiente link vas a encontrar la invitación, toda la información del casamiento y la opción para confirmar tu asistencia:\n\n${url}\n\n¡Esperamos que puedas acompañarnos!`
 
   if (navigator.share && isMobileDevice()) {
     navigator.share({ text }).catch(() => {})
@@ -116,9 +98,6 @@ function shareViaWhatsapp(guest: Guest) {
   }
 }
 
-function familyLabel(name: string): string {
-  return /^familia\b/i.test(name) ? name : `la familia ${name}`
-}
 
 function copyInviteLink(guest: Guest) {
   if (!guest.invite_token) return
@@ -141,60 +120,52 @@ const STATUS_LABEL_ES: Record<Guest['rsvp_status'], string> = {
   declined: 'No asiste',
 }
 
-function csvEscape(value: string | null | undefined): string {
-  const str = value ?? ''
-  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-    return `"${str.replace(/"/g, '""')}"`
-  }
-  return str
+function downloadXlsx(rows: Record<string, string>[], filename: string) {
+  import('xlsx').then(({ utils, writeFile }) => {
+    const ws = utils.json_to_sheet(rows)
+    const wb = utils.book_new()
+    utils.book_append_sheet(wb, ws, 'Datos')
+    writeFile(wb, filename)
+  })
 }
 
-function exportGuestsCsv(guests: Guest[]) {
-  const headers = ['Nombre', 'Tipo', 'Estado', 'Email', 'Teléfono', 'Restricciones alimentarias', 'Integrante de']
-  const rows: string[][] = []
-
+function exportGuestsXlsx(guests: Guest[], tables: WeddingTable[]) {
+  const tableName = (id: string | null) => tables.find((t) => t.id === id)?.name ?? ''
+  const rows: Record<string, string>[] = []
   for (const g of guests) {
-    rows.push([
-      g.name,
-      g.invitation_type === 'family' ? 'Familia' : 'Individual',
-      STATUS_LABEL_ES[g.rsvp_status],
-      g.email ?? '',
-      g.phone ?? '',
-      g.dietary_restrictions ?? '',
-      '',
-    ])
+    if (g.invitation_type !== 'family') {
+      rows.push({
+        Nombre: g.name,
+        Tipo: 'Individual',
+        Estado: STATUS_LABEL_ES[g.rsvp_status],
+        Mesa: tableName(g.table_id),
+        Email: g.email ?? '',
+        Teléfono: g.phone ?? '',
+        'Restricciones alimentarias': g.dietary_restrictions ?? '',
+      })
+    }
     for (const p of g.plus_ones ?? []) {
-      rows.push([
-        p.name,
-        g.invitation_type === 'family' ? 'Integrante de familia' : '+1',
-        STATUS_LABEL_ES[p.rsvp_status],
-        p.email ?? '',
-        p.phone ?? '',
-        p.dietary_restrictions ?? '',
-        g.name,
-      ])
+      rows.push({
+        Nombre: p.name,
+        Tipo: g.invitation_type === 'family' ? 'Integrante de familia' : '+1',
+        Estado: STATUS_LABEL_ES[p.rsvp_status],
+        Mesa: tableName(p.table_id ?? null),
+        Email: p.email ?? '',
+        Teléfono: p.phone ?? '',
+        'Restricciones alimentarias': p.dietary_restrictions ?? '',
+      })
     }
   }
-
-  const csv =
-    '﻿' +
-    [headers, ...rows].map((row) => row.map(csvEscape).join(',')).join('\n')
-
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `invitados-${new Date().toISOString().slice(0, 10)}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
+  downloadXlsx(rows, `invitados-${new Date().toISOString().slice(0, 10)}.xlsx`)
 }
 
 interface GuestsTabProps {
   guests: Guest[]
   setGuests: (updater: (prev: Guest[]) => Guest[]) => void
+  tables: WeddingTable[]
 }
 
-export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
+export function GuestsTab({ guests, setGuests, tables }: GuestsTabProps) {
   const [newGuestType, setNewGuestType] = useState<InvitationType>('individual')
   const [newGuestName, setNewGuestName] = useState('')
   const [newGuestEmail, setNewGuestEmail] = useState('')
@@ -208,7 +179,13 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
   const [editPhone, setEditPhone] = useState('')
   const [editPlusOnes, setEditPlusOnes] = useState('0')
   const [editPreload, setEditPreload] = useState<PlusOnePreload[]>([])
+  const [editTableId, setEditTableId] = useState<string>('')
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null)
+  const [editMemberName, setEditMemberName] = useState('')
+  const [editMemberTableId, setEditMemberTableId] = useState('')
+  const [editMemberDietary, setEditMemberDietary] = useState('')
+  const [editMemberStatus, setEditMemberStatus] = useState<'attending' | 'declined'>('attending')
 
   function preloadHandlers(preload: PlusOnePreload[], setPreload: (updater: (prev: PlusOnePreload[]) => PlusOnePreload[]) => void, cap: number) {
     return {
@@ -232,8 +209,8 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
       toast.error('Una familia necesita al menos 1 integrante')
       return
     }
-    if (newGuestPreload.some((p) => !p.name.trim() || !p.phone.trim())) {
-      toast.error('Completá el nombre y teléfono de todos los integrantes precargados')
+    if (newGuestPreload.some((p) => !p.name.trim())) {
+      toast.error('Completá el nombre de todos los integrantes precargados')
       return
     }
     setAddingGuest(true)
@@ -287,6 +264,7 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
     setEditPhone(guest.phone ?? '')
     setEditPlusOnes(String(guest.max_plus_ones))
     setEditPreload(guest.plus_ones_preload ?? [])
+    setEditTableId(guest.table_id ?? '')
   }
 
   async function saveEdit(id: string) {
@@ -298,8 +276,8 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
       toast.error('Una familia necesita al menos 1 integrante')
       return
     }
-    if (editPreload.some((p) => !p.name.trim() || !p.phone.trim())) {
-      toast.error('Completá el nombre y teléfono de todos los integrantes precargados')
+    if (editPreload.some((p) => !p.name.trim())) {
+      toast.error('Completá el nombre de todos los integrantes precargados')
       return
     }
     setBusyId(id)
@@ -317,6 +295,7 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
           email: p.email.trim(),
           phone: p.phone.trim(),
         })),
+        table_id: editTableId || null,
       }),
     })
     const data = await res.json()
@@ -326,6 +305,68 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
       toast.success('Invitado actualizado')
     } else {
       toast.error(data.error)
+    }
+    setBusyId(null)
+  }
+
+  function startEditMember(p: Guest) {
+    setEditingMemberId(p.id)
+    setEditMemberName(p.name)
+    setEditMemberTableId(p.table_id ?? '')
+    setEditMemberDietary(p.dietary_restrictions ?? '')
+    setEditMemberStatus(p.rsvp_status === 'declined' ? 'declined' : 'attending')
+  }
+
+  async function saveMember(memberId: string) {
+    if (!editMemberName.trim()) return
+    setBusyId(memberId)
+    const res = await fetch('/api/admin/guests', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: memberId,
+        name: editMemberName.trim(),
+        table_id: editMemberTableId || null,
+        dietary_restrictions: editMemberDietary.trim(),
+        rsvp_status: editMemberStatus,
+      }),
+    })
+    if (res.ok) {
+      setGuests((prev) => prev.map((g) => ({
+        ...g,
+        plus_ones: g.plus_ones?.map((p) =>
+          p.id === memberId
+            ? { ...p, name: editMemberName.trim(), table_id: editMemberTableId || null, dietary_restrictions: editMemberDietary.trim(), rsvp_status: editMemberStatus }
+            : p
+        ) ?? [],
+      })))
+      setEditingMemberId(null)
+      toast.success('Guardado')
+    } else {
+      const data = await res.json()
+      toast.error(data.error ?? 'Error al guardar')
+    }
+    setBusyId(null)
+  }
+
+  async function resetRsvp(id: string) {
+    if (!confirm('¿Sacar la confirmación? El invitado podrá volver a confirmar su asistencia.')) return
+    setBusyId(id)
+    const res = await fetch('/api/admin/guests/reset-rsvp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    const data = await res.json()
+    if (res.ok) {
+      setGuests((prev) => prev.map((g) =>
+        g.id === id
+          ? { ...data.guest, plus_ones: [], plus_ones_preload: g.plus_ones_preload }
+          : g
+      ))
+      toast.success('Confirmación removida')
+    } else {
+      toast.error(data.error ?? 'Error al resetear')
     }
     setBusyId(null)
   }
@@ -356,7 +397,7 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
             value={newGuestType}
             onChange={(e) => setNewGuestType(e.target.value as InvitationType)}
             disabled={addingGuest}
-            className="h-9 w-full min-w-0 rounded-lg border border-input bg-transparent px-3 py-1 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+            className="h-9 w-full min-w-0 rounded-lg border border-input bg-white px-3 py-1 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           >
             <option value="individual">Individual</option>
             <option value="family">Familia</option>
@@ -414,30 +455,42 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
         {Number(newGuestPlusOnes) > 0 && (
           <PreloadEditor
             label={newGuestType === 'family' ? 'Precargar integrantes' : 'Precargar acompañantes'}
-            addLabel={newGuestType === 'family' ? 'Agregar integrante' : 'Agregar acompañante'}
             preload={newGuestPreload}
             cap={Number(newGuestPlusOnes) || 0}
             disabled={addingGuest}
-            onAdd={newPreload.add}
             onUpdate={newPreload.update}
             onRemove={newPreload.remove}
           />
         )}
 
-        <Button
-          type="submit"
-          disabled={addingGuest || !newGuestName.trim() || !newGuestPhone.trim()}
-          size="sm"
-        >
-          {addingGuest ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <>
-              <Plus className="w-4 h-4 mr-1" />
-              {newGuestType === 'family' ? 'Agregar familia' : 'Agregar invitado'}
-            </>
+        <div className="flex items-center justify-between gap-2">
+          {Number(newGuestPlusOnes) > 0 && newGuestPreload.length < (Number(newGuestPlusOnes) || 0) && (
+            <button
+              type="button"
+              onClick={newPreload.add}
+              disabled={addingGuest}
+              className="flex items-center gap-1 text-xs font-medium text-ink-500 hover:text-ink-600"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              {newGuestType === 'family' ? 'Agregar integrante' : 'Agregar acompañante'}
+            </button>
           )}
-        </Button>
+          <Button
+            type="submit"
+            disabled={addingGuest || !newGuestName.trim() || !newGuestPhone.trim()}
+            size="sm"
+            className="ml-auto"
+          >
+            {addingGuest ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                <Plus className="w-4 h-4 mr-1" />
+                {newGuestType === 'family' ? 'Agregar familia' : 'Agregar invitado'}
+              </>
+            )}
+          </Button>
+        </div>
       </form>
 
       <div className="flex items-center justify-between">
@@ -449,7 +502,7 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
           {guests.filter((g) => g.rsvp_status === 'pending').length} pendientes
         </p>
         {guests.length > 0 && (
-          <Button size="sm" variant="outline" onClick={() => exportGuestsCsv(guests)}>
+          <Button size="sm" variant="outline" onClick={() => exportGuestsXlsx(guests, tables)}>
             <Download className="w-3.5 h-3.5 mr-1.5" />
             Exportar Excel
           </Button>
@@ -464,7 +517,7 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
             <div key={g.id} className="px-4 py-3 space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium text-stone-800 text-sm truncate">{g.name}</p>
                     {g.invitation_type === 'family' && (
                       <Badge className="text-[10px] px-1.5 py-0 h-4 bg-ink-100 text-ink-600">Familia</Badge>
@@ -472,6 +525,11 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
                     <Badge className={`text-[10px] px-1.5 py-0 h-4 ${STATUS_VARIANT[g.rsvp_status]}`}>
                       {STATUS_LABEL_ES[g.rsvp_status]}
                     </Badge>
+                    {g.table_id && tables.find((t) => t.id === g.table_id) && (
+                      <Badge className="text-[10px] px-1.5 py-0 h-4 bg-amber-100 text-amber-700">
+                        {tables.find((t) => t.id === g.table_id)!.name}
+                      </Badge>
+                    )}
                   </div>
                   {g.invitation_type !== 'family' && (
                     <p className="text-xs text-stone-400">
@@ -513,6 +571,16 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
                   >
                     <Send className="w-4 h-4" />
                   </button>
+                  {g.rsvp_submitted_at && (
+                    <button
+                      onClick={() => resetRsvp(g.id)}
+                      disabled={busyId === g.id}
+                      title="Sacar confirmación"
+                      className="text-stone-300 hover:text-amber-500 disabled:opacity-30 transition-colors"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </button>
+                  )}
                   <button
                     onClick={() => startEdit(g)}
                     className="text-stone-300 hover:text-stone-600 transition-colors"
@@ -533,7 +601,7 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
                       value={editType}
                       onChange={(e) => setEditType(e.target.value as InvitationType)}
                       disabled={busyId === g.id}
-                      className="h-9 w-full min-w-0 rounded-lg border border-input bg-transparent px-3 py-1 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                      className="h-9 w-full min-w-0 rounded-lg border border-input bg-white px-3 py-1 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                     >
                       <option value="individual">Individual</option>
                       <option value="family">Familia</option>
@@ -570,6 +638,22 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
                         disabled={busyId === g.id}
                       />
                     </div>
+                    {editType !== 'family' && (g.plus_ones?.length ?? 0) === 0 && (
+                      <div className="space-y-1">
+                        <Label className="text-xs">Mesa</Label>
+                        <select
+                          value={editTableId}
+                          onChange={(e) => setEditTableId(e.target.value)}
+                          disabled={busyId === g.id}
+                          className="h-9 w-full min-w-0 rounded-lg border border-input bg-white px-3 py-1 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                        >
+                          <option value="">Sin mesa</option>
+                          {tables.map((t) => (
+                            <option key={t.id} value={t.id}>{t.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
 
                   {editType === 'family' && (
@@ -578,28 +662,39 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
                     </p>
                   )}
 
-                  {Number(editPlusOnes) > 0 && (
+                  {Number(editPlusOnes) > 0 && (g.plus_ones?.length ?? 0) === 0 && (
                     <PreloadEditor
                       label={editType === 'family' ? 'Precargar integrantes' : 'Precargar acompañantes'}
-                      addLabel={editType === 'family' ? 'Agregar integrante' : 'Agregar acompañante'}
                       preload={editPreload}
                       cap={Number(editPlusOnes) || 0}
                       disabled={busyId === g.id}
-                      onAdd={editPreloadHandlers.add}
                       onUpdate={editPreloadHandlers.update}
                       onRemove={editPreloadHandlers.remove}
                     />
                   )}
 
-                  <div className="flex gap-2">
-                    <Button size="xs" onClick={() => saveEdit(g.id)} disabled={busyId === g.id || !editPhone.trim()}>
-                      <Check className="w-3.5 h-3.5 mr-1" />
-                      Guardar
-                    </Button>
-                    <Button size="xs" variant="ghost" onClick={() => setEditingId(null)} disabled={busyId === g.id}>
-                      <X className="w-3.5 h-3.5 mr-1" />
-                      Cancelar
-                    </Button>
+                  <div className="flex items-center justify-between gap-2">
+                    {Number(editPlusOnes) > 0 && (g.plus_ones?.length ?? 0) === 0 && editPreload.length < (Number(editPlusOnes) || 0) && (
+                      <button
+                        type="button"
+                        onClick={editPreloadHandlers.add}
+                        disabled={busyId === g.id}
+                        className="flex items-center gap-1 text-xs font-medium text-ink-500 hover:text-ink-600"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        {editType === 'family' ? 'Agregar integrante' : 'Agregar acompañante'}
+                      </button>
+                    )}
+                    <div className="flex gap-2 ml-auto">
+                      <Button size="xs" onClick={() => saveEdit(g.id)} disabled={busyId === g.id || !editPhone.trim()}>
+                        <Check className="w-3.5 h-3.5 mr-1" />
+                        Guardar
+                      </Button>
+                      <Button size="xs" variant="ghost" onClick={() => setEditingId(null)} disabled={busyId === g.id}>
+                        <X className="w-3.5 h-3.5 mr-1" />
+                        Cancelar
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -622,38 +717,114 @@ export function GuestsTab({ guests, setGuests }: GuestsTabProps) {
               {g.plus_ones && g.plus_ones.length > 0 && (
                 <div className="pl-3 border-l-2 border-stone-100 space-y-2">
                   {g.plus_ones.map((p) => (
-                    <div key={p.id} className="flex items-center justify-between gap-2 bg-stone-50 rounded-lg px-3 py-2">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm text-stone-700 truncate">{p.name}</p>
-                          <Badge className="text-[10px] px-1.5 py-0 h-4 bg-sage-100 text-sage-600">
-                            {g.invitation_type === 'family'
-                              ? `Integrante de ${familyLabel(g.name)}`
-                              : `+1 de ${g.name}`}
-                          </Badge>
+                    <div key={p.id} className="bg-stone-50 rounded-lg px-3 py-2 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm text-stone-700 truncate">{p.name}</p>
+                            <Badge className={`text-[10px] px-1.5 py-0 h-4 ${STATUS_VARIANT[p.rsvp_status]}`}>
+                              {STATUS_LABEL_ES[p.rsvp_status]}
+                            </Badge>
+                            {p.table_id && tables.find((t) => t.id === p.table_id) && (
+                              <Badge className="text-[10px] px-1.5 py-0 h-4 bg-amber-100 text-amber-700">
+                                {tables.find((t) => t.id === p.table_id)!.name}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-stone-400">
+                            Código de acceso: <span className="font-mono">{p.code}</span>
+                          </p>
+                          {p.dietary_restrictions && (
+                            <p className="text-xs text-stone-500">🍽️ {p.dietary_restrictions}</p>
+                          )}
                         </div>
-                        <p className="text-xs text-stone-400">
-                          Código de acceso: <span className="font-mono">{p.code}</span>
-                        </p>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <button
+                            onClick={() => copyInviteLink(p)}
+                            disabled={!p.invite_token}
+                            title="Copiar enlace"
+                            className="text-stone-300 hover:text-ink-500 disabled:opacity-30 transition-colors"
+                          >
+                            <Link2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => shareViaWhatsapp(p)}
+                            disabled={!p.invite_token}
+                            title="Enviar por WhatsApp"
+                            className="text-stone-300 hover:text-green-500 disabled:opacity-30 transition-colors"
+                          >
+                            <WhatsappIcon className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => startEditMember(p)}
+                            className="text-stone-300 hover:text-stone-600 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <button
-                          onClick={() => copyInviteLink(p)}
-                          disabled={!p.invite_token}
-                          title="Copiar enlace de la invitación"
-                          className="text-stone-300 hover:text-ink-500 disabled:opacity-30 transition-colors"
-                        >
-                          <Link2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => shareViaWhatsapp(p)}
-                          disabled={!p.invite_token}
-                          title="Enviar por WhatsApp"
-                          className="text-stone-300 hover:text-green-500 disabled:opacity-30 transition-colors"
-                        >
-                          <WhatsappIcon className="w-4 h-4" />
-                        </button>
-                      </div>
+
+                      {editingMemberId === p.id && (
+                        <div className="space-y-2 pt-1 border-t border-stone-200">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Nombre</Label>
+                              <Input
+                                value={editMemberName}
+                                onChange={(e) => setEditMemberName(e.target.value)}
+                                disabled={busyId === p.id}
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Mesa</Label>
+                              <select
+                                value={editMemberTableId}
+                                onChange={(e) => setEditMemberTableId(e.target.value)}
+                                disabled={busyId === p.id}
+                                className="h-9 w-full min-w-0 rounded-lg border border-input bg-white px-3 py-1 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                              >
+                                <option value="">Sin mesa</option>
+                                {tables.map((t) => (
+                                  <option key={t.id} value={t.id}>{t.name}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Restricción alimentaria</Label>
+                              <Input
+                                value={editMemberDietary}
+                                onChange={(e) => setEditMemberDietary(e.target.value)}
+                                placeholder="Opcional"
+                                disabled={busyId === p.id}
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Estado</Label>
+                              <select
+                                value={editMemberStatus}
+                                onChange={(e) => setEditMemberStatus(e.target.value as 'attending' | 'declined')}
+                                disabled={busyId === p.id}
+                                className="h-9 w-full min-w-0 rounded-lg border border-input bg-white px-3 py-1 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                              >
+                                <option value="attending">Asistirá</option>
+                                <option value="declined">No asistirá</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <Button size="xs" onClick={() => saveMember(p.id)} disabled={busyId === p.id || !editMemberName.trim()}>
+                              <Check className="w-3.5 h-3.5 mr-1" />
+                              Guardar
+                            </Button>
+                            <Button size="xs" variant="ghost" onClick={() => setEditingMemberId(null)} disabled={busyId === p.id}>
+                              <X className="w-3.5 h-3.5 mr-1" />
+                              Cancelar
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
