@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Camera, ChevronRight, Images, Music } from 'lucide-react'
+import { Camera, ChevronRight, Images, Music, CheckCircle2 } from 'lucide-react'
 import { PhotoUploadModal } from '@/components/PhotoUploadModal'
 import { HandDrawnUnderline } from '@/components/decorations'
 import type { Challenge, Message } from '@/types'
@@ -39,11 +39,12 @@ function HomeChallengeCard({
 interface Props {
   guestName: string
   challenges: Challenge[]
+  completedCount: number
   messages: Message[]
   photoCount: number
 }
 
-export function HomeContent({ guestName, challenges, messages, photoCount }: Props) {
+export function HomeContent({ guestName, challenges, completedCount, messages, photoCount }: Props) {
   const [uploadChallenge, setUploadChallenge] = useState<Challenge | null>(null)
 
   const firstName = guestName.split(' ')[0]
@@ -60,9 +61,17 @@ export function HomeContent({ guestName, challenges, messages, photoCount }: Pro
 
       {/* Desafíos */}
       <section className="space-y-3">
-        <h2 className="font-semibold text-stone-700">
-          Tenemos unos desafíos para vos esta noche 😏
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-stone-700">
+            Tenemos unos desafíos para vos esta noche 😏
+          </h2>
+          {completedCount > 0 && (
+            <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 border border-green-200 rounded-full px-2.5 py-1">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              {completedCount}/{challenges.length}
+            </span>
+          )}
+        </div>
 
         {featuredChallenges.length === 0 ? (
           <p className="text-sm text-stone-400">Próximamente...</p>
