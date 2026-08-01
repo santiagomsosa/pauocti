@@ -37,6 +37,7 @@ export interface PlusOnePreload {
 
 export interface Settings {
   wedding_datetime: string | null
+  venue_datetime: string | null
   couple_names: string | null
   ceremony_venue: string | null
   ceremony_address: string | null

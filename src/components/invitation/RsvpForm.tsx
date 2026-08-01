@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { toast } from 'sonner'
 import { Loader2, Plus, Trash2, Check } from 'lucide-react'
+import { familyDisplayName, isPluralGuest } from '@/lib/guest'
 import type { Guest, PlusOneInput } from '@/types'
 
 interface RsvpFormProps {
@@ -34,9 +35,10 @@ function preloadedPlusOnes(guest: Guest, pad: boolean): PlusOneInput[] {
 
 export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
   const isFamily = guest.invitation_type === 'family'
+  const isPlural = isPluralGuest(guest)
   const [attending, setAttending] = useState<'attending' | 'declined' | null>(null)
-  const [phone, setPhone] = useState('')
-  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState(guest.phone ?? '')
+  const [email, setEmail] = useState(guest.email ?? '')
   const [dietary, setDietary] = useState('')
   const [plusOnes, setPlusOnes] = useState<PlusOneInput[]>(() => preloadedPlusOnes(guest, isFamily))
   const [loading, setLoading] = useState(false)
@@ -136,9 +138,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
           Confirmá tu asistencia
         </p>
         <p className="text-stone-700 leading-relaxed">
-          {isFamily
-            ? `${guest.name}, nos encantaría compartir este día con ustedes`
-            : `${guest.name}, nos encantaría compartir este día con vos`}
+          {familyDisplayName(guest)}, nos encantaría compartir este día con {isPlural ? 'ustedes' : 'vos'}
         </p>
         {!isFamily && (
           <div className="grid grid-cols-2 gap-3 pt-1">
@@ -157,7 +157,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
               }`}
             >
               {attending === 'attending' && <Check className="w-4 h-4" />}
-              ¡Sí, voy!
+              {isPlural ? '¡Sí, vamos!' : '¡Sí, voy!'}
             </motion.button>
             <button
               type="button"
@@ -169,7 +169,7 @@ export function RsvpForm({ guest, onSubmitted }: RsvpFormProps) {
                   : 'bg-transparent border-stone-300 text-stone-500 hover:border-stone-400'
               }`}
             >
-              No voy a poder
+              {isPlural ? 'No vamos a poder' : 'No voy a poder'}
             </button>
           </div>
         )}

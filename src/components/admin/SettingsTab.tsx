@@ -22,6 +22,7 @@ interface SettingsTabProps {
 
 export function SettingsTab({ settings, setSettings }: SettingsTabProps) {
   const [weddingDatetime, setWeddingDatetime] = useState(toDatetimeLocal(settings.wedding_datetime))
+  const [venueDatetime, setVenueDatetime] = useState(toDatetimeLocal(settings.venue_datetime))
   const [coupleNames, setCoupleNames] = useState(settings.couple_names ?? '')
   const [ceremonyVenue, setCeremonyVenue] = useState(settings.ceremony_venue ?? '')
   const [ceremonyAddress, setCeremonyAddress] = useState(settings.ceremony_address ?? '')
@@ -44,6 +45,7 @@ export function SettingsTab({ settings, setSettings }: SettingsTabProps) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         wedding_datetime: weddingDatetime ? new Date(weddingDatetime).toISOString() : '',
+        venue_datetime: venueDatetime ? new Date(venueDatetime).toISOString() : '',
         couple_names: coupleNames.trim(),
         ceremony_venue: ceremonyVenue.trim(),
         ceremony_address: ceremonyAddress.trim(),
@@ -85,7 +87,7 @@ export function SettingsTab({ settings, setSettings }: SettingsTabProps) {
       <form onSubmit={save} className="bg-white rounded-xl p-4 shadow-sm space-y-3">
         <h2 className="font-semibold text-stone-700">Configuración del evento</h2>
         <div className="space-y-1">
-          <Label>Fecha y hora del casamiento</Label>
+          <Label>Fecha y hora de la ceremonia</Label>
           <Input
             type="datetime-local"
             value={weddingDatetime}
@@ -144,6 +146,15 @@ export function SettingsTab({ settings, setSettings }: SettingsTabProps) {
                 placeholder="Ej: Quinta El Remanso"
                 value={venue}
                 onChange={(e) => setVenue(e.target.value)}
+                disabled={saving}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Hora de inicio</Label>
+              <Input
+                type="datetime-local"
+                value={venueDatetime}
+                onChange={(e) => setVenueDatetime(e.target.value)}
                 disabled={saving}
               />
             </div>
