@@ -1,8 +1,10 @@
 import { notFound } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { createServerClient } from '@/lib/supabase/server'
 import { getSettings } from '@/lib/settings'
+import { ADMIN_COOKIE } from '@/lib/auth'
 import { InvitationView } from '@/components/invitation/InvitationView'
-import type { Guest } from '@/types'
+import type { Guest, GuestOpen } from '@/types'
 
 export default async function InvitationPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
@@ -16,6 +18,20 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
 
   if (error || !guest) {
     notFound()
+  }
+
+  // No contamos como "apertura" cuando el admin abre el link para previsualizarlo
+  const cookieStore = await cookies()
+  if (!cookieStore.get(ADMIN_COOKIE)) {
+    try {
+      const opens: GuestOpen[] = Array.isArray(guest.opens) ? guest.opens : []
+      await supabase
+        .from('guests')
+        .update({ opens: [...opens, { at: new Date().toISOString() }] })
+        .eq('id', guest.id)
+    } catch {
+      // El registro de apertura no debe romper el render de la invitación
+    }
   }
 
   const { data: plusOnes } = await supabase

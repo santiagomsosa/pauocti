@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Trash2, Plus, Loader2, Mail, Phone, Pencil, Check, X, Send, Link2, Download, RotateCcw } from 'lucide-react'
+import { Trash2, Plus, Loader2, Mail, Phone, Pencil, Check, X, Send, Link2, Download, RotateCcw, LineChart } from 'lucide-react'
 import { familyDisplayName, isPluralGuest } from '@/lib/guest'
 import type { Guest, InvitationType, PlusOnePreload, WeddingTable } from '@/types'
 
@@ -505,12 +506,20 @@ export function GuestsTab({ guests, setGuests, tables }: GuestsTabProps) {
           {' · '}
           {guests.filter((g) => g.rsvp_status === 'pending').length} pendientes
         </p>
-        {guests.length > 0 && (
-          <Button size="sm" variant="outline" onClick={() => exportGuestsXlsx(guests, tables)}>
-            <Download className="w-3.5 h-3.5 mr-1.5" />
-            Exportar Excel
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <Link href="/admin/seguimiento">
+            <Button size="sm" variant="outline">
+              <LineChart className="w-3.5 h-3.5 mr-1.5" />
+              Seguimiento
+            </Button>
+          </Link>
+          {guests.length > 0 && (
+            <Button size="sm" variant="outline" onClick={() => exportGuestsXlsx(guests, tables)}>
+              <Download className="w-3.5 h-3.5 mr-1.5" />
+              Exportar Excel
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm divide-y">
