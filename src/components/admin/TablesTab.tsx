@@ -267,7 +267,7 @@ export function TablesTab({ tables, setTables, guests, setGuests }: TablesTabPro
       </form>
 
       {tables.length > 0 && (
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
           <div className="flex flex-col gap-0.5">
             <p className="text-xs text-stone-400">
               {tables.length} mesa{tables.length !== 1 ? 's' : ''}
@@ -280,7 +280,7 @@ export function TablesTab({ tables, setTables, guests, setGuests }: TablesTabPro
               </p>
             )}
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setExpandedIds(new Set(tables.map((t) => t.id)))}
               className="text-xs text-ink-500 hover:text-ink-700 transition-colors"

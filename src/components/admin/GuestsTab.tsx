@@ -498,7 +498,7 @@ export function GuestsTab({ guests, setGuests, tables }: GuestsTabProps) {
         </div>
       </form>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <p className="text-xs text-stone-400">
           {guests.length} invitado{guests.length !== 1 ? 's' : ''}
           {' · '}
@@ -506,7 +506,7 @@ export function GuestsTab({ guests, setGuests, tables }: GuestsTabProps) {
           {' · '}
           {guests.filter((g) => g.rsvp_status === 'pending').length} pendientes
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Link href="/admin/seguimiento">
             <Button size="sm" variant="outline">
               <LineChart className="w-3.5 h-3.5 mr-1.5" />
