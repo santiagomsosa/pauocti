@@ -9,6 +9,10 @@ export interface WeddingTable {
   created_at: string
 }
 
+export interface GuestOpen {
+  at: string
+}
+
 export interface Guest {
   id: string
   name: string
@@ -26,6 +30,7 @@ export interface Guest {
   rsvp_submitted_at: string | null
   plus_ones_preload: PlusOnePreload[]
   table_id: string | null
+  opens: GuestOpen[]
   plus_ones?: Guest[]
 }
 
