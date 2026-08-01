@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Trash2, Plus, Loader2, Mail, Phone, Pencil, Check, X, Send, Link2, Download, RotateCcw } from 'lucide-react'
-import { familyDisplayName } from '@/lib/guest'
+import { familyDisplayName, isPluralGuest } from '@/lib/guest'
 import type { Guest, InvitationType, PlusOnePreload, WeddingTable } from '@/types'
 
 function PreloadEditor({
@@ -85,7 +85,7 @@ function shareViaWhatsapp(guest: Guest) {
   if (!guest.invite_token) return
   const url = `${window.location.origin}/invitacion/${guest.invite_token}`
   const displayName = familyDisplayName(guest)
-  const text = guest.invitation_type === 'family'
+  const text = isPluralGuest(guest)
     ? `¡Hola, ${displayName}! ¡Nos casamos!\nEn el siguiente link van a encontrar la invitación, toda la información del casamiento y la opción para confirmar su asistencia:\n\n${url}\n\n¡Esperamos que puedan acompañarnos!`
     : `¡Hola, ${guest.name}! ¡Nos casamos!\nEn el siguiente link vas a encontrar la invitación, toda la información del casamiento y la opción para confirmar tu asistencia:\n\n${url}\n\n¡Esperamos que puedas acompañarnos!`
 
