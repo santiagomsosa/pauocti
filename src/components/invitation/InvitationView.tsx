@@ -50,14 +50,33 @@ function CoupleNames({ names }: { names: string }) {
   const parts = names.split(/\s*&\s*/)
   if (parts.length === 2) {
     return (
-      <h1 className="font-script text-5xl text-ink-600 leading-tight">
-        {parts[0]}
-        <span className="text-rose-400"> &amp; </span>
-        {parts[1]}
+      <h1 className="absolute inset-0 pointer-events-none">
+        <span
+          className="absolute whitespace-nowrap font-script text-ink-600 leading-none"
+          style={{ left: '34%', top: '10%', fontSize: 'clamp(2rem, 6.15vw, 10rem)' }}
+        >
+          {parts[0]}
+        </span>
+        <span
+          className="absolute whitespace-nowrap font-script text-rose-400 leading-none"
+          style={{ left: '37.5%', top: '25%', fontSize: 'clamp(1.85rem, 5.3vw, 8rem)' }}
+        >
+          &amp;
+        </span>
+        <span
+          className="absolute whitespace-nowrap font-script text-ink-600 leading-none"
+          style={{ left: '40%', top: '26%', fontSize: 'clamp(2.3rem, 7.3vw, 12rem)' }}
+        >
+          {parts[1]}
+        </span>
       </h1>
     )
   }
-  return <h1 className="font-script text-5xl text-ink-600 leading-tight">{names}</h1>
+  return (
+    <h1 className="absolute inset-x-0 top-[14%] text-center px-4 max-w-md mx-auto font-script text-5xl text-ink-600 leading-tight">
+      {names}
+    </h1>
+  )
 }
 
 function PlaceCard({
@@ -180,18 +199,17 @@ export function InvitationView({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.7 }}
-        className="relative w-full aspect-[1870/841] max-h-[420px]"
+        className="relative w-full aspect-[1870/841] max-h-[420px] overflow-hidden"
       >
-        <Image
-          src="/invitacion/encabezado.png"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-rose-50" />
-        <div className="absolute inset-x-0 top-[14%] text-center px-4 max-w-md mx-auto">
+        <div className="absolute inset-x-0 top-0 w-full aspect-[1870/841]">
+          <Image
+            src="/invitacion/encabezado.png"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-top"
+          />
           <CoupleNames names={coupleNames} />
         </div>
       </motion.div>
