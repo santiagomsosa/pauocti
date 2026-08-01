@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { motion, useScroll, useTransform, type MotionValue } from 'motion/react'
 import { toast } from 'sonner'
 import { MapPin, CalendarPlus, Copy, ArrowRight } from 'lucide-react'
@@ -10,6 +9,7 @@ import { GoldDots, BotanicalDivider, GiftIcon } from '@/components/decorations'
 import { Countdown } from '@/components/invitation/Countdown'
 import { RsvpForm } from '@/components/invitation/RsvpForm'
 import { FrozenInvitation } from '@/components/invitation/FrozenInvitation'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { downloadCalendarEvent } from '@/lib/calendar'
 import { familyDisplayName, isPluralGuest } from '@/lib/guest'
 import type { Guest, Settings } from '@/types'
@@ -164,6 +164,7 @@ export function InvitationView({
   tableName?: string | null
 }) {
   const [guest, setGuest] = useState(initialGuest)
+  const [transferOpen, setTransferOpen] = useState(false)
   const coupleNames = settings.couple_names ?? 'Pau & Octi'
   const dateLabel = settings.wedding_datetime ? formatShortDate(settings.wedding_datetime) : null
 
@@ -174,7 +175,6 @@ export function InvitationView({
   const yIconC = useTransform(scrollYProgress, [0, 1], [0, -100])
 
   const hasTransfer = !!(settings.bank_ars_account || settings.bank_ars_cbu || settings.bank_usd_account || settings.bank_usd_cbu)
-  const isFamily = guest.invitation_type === 'family'
   const isPlural = isPluralGuest(guest)
 
   function handleAgendar() {
@@ -333,28 +333,46 @@ export function InvitationView({
                   ? <>¡Gracias por acompañarnos en este día tan especial! Para nosotros, compartirlo con ustedes es el mejor regalo. No es necesario que nos hagan un obsequio, pero si desean hacerlo, lo vamos a agradecer muchísimo y lo recibiremos con mucho cariño. Acá abajo van a encontrar algunas opciones.</>
                   : <>¡Gracias por acompañarnos en este día tan especial! Para nosotros, compartirlo con vos es el mejor regalo. No es necesario que nos hagas un obsequio, pero si querés hacerlo, lo vamos a agradecer muchísimo y lo recibiremos con mucho cariño. Acá abajo vas a encontrar algunas opciones.</>}
               </p>
-              <div className="grid gap-6 sm:grid-cols-2 text-left">
-                {(settings.bank_ars_account || settings.bank_ars_cbu) && (
-                  <div className="space-y-1">
-                    <p className="font-title flex items-center gap-1.5 text-sm uppercase tracking-wide text-rose-500">
-                      <GiftIcon className="w-4 h-4" />
-                      Pesos
-                    </p>
-                    {settings.bank_ars_account && <StaticField label="Cuenta" value={settings.bank_ars_account} />}
-                    {settings.bank_ars_cbu && <CopyField label="CBU" value={settings.bank_ars_cbu} />}
-                  </div>
-                )}
-                {(settings.bank_usd_account || settings.bank_usd_cbu) && (
-                  <div className="space-y-1">
-                    <p className="font-title flex items-center gap-1.5 text-sm uppercase tracking-wide text-rose-500">
-                      <GiftIcon className="w-4 h-4" />
-                      Dólares
-                    </p>
-                    {settings.bank_usd_account && <StaticField label="Cuenta" value={settings.bank_usd_account} />}
-                    {settings.bank_usd_cbu && <CopyField label="CBU" value={settings.bank_usd_cbu} />}
-                  </div>
-                )}
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setTransferOpen(true)}
+                  className="font-title inline-flex items-center gap-1.5 rounded-full border border-ink-300 px-5 py-2 text-sm uppercase tracking-wide text-ink-600 transition hover:bg-ink-100/50"
+                >
+                  Ver CBU
+                </button>
               </div>
+              <Dialog open={transferOpen} onOpenChange={(open) => setTransferOpen(open)}>
+                <DialogContent className="max-w-lg max-h-[90dvh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="font-title text-xl uppercase tracking-wide text-ink-600">
+                      Datos para transferencia
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-6 sm:grid-cols-2 text-left">
+                    {(settings.bank_ars_account || settings.bank_ars_cbu) && (
+                      <div className="space-y-1">
+                        <p className="font-title flex items-center gap-1.5 text-sm uppercase tracking-wide text-rose-500">
+                          <GiftIcon className="w-4 h-4" />
+                          Pesos
+                        </p>
+                        {settings.bank_ars_account && <StaticField label="Cuenta" value={settings.bank_ars_account} />}
+                        {settings.bank_ars_cbu && <CopyField label="CBU" value={settings.bank_ars_cbu} />}
+                      </div>
+                    )}
+                    {(settings.bank_usd_account || settings.bank_usd_cbu) && (
+                      <div className="space-y-1">
+                        <p className="font-title flex items-center gap-1.5 text-sm uppercase tracking-wide text-rose-500">
+                          <GiftIcon className="w-4 h-4" />
+                          Dólares
+                        </p>
+                        {settings.bank_usd_account && <StaticField label="Cuenta" value={settings.bank_usd_account} />}
+                        {settings.bank_usd_cbu && <CopyField label="CBU" value={settings.bank_usd_cbu} />}
+                      </div>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
             </motion.section>
           )}
 
@@ -369,39 +387,6 @@ export function InvitationView({
             <p className="font-title text-2xl uppercase tracking-wide text-ink-600">Formal</p>
           </motion.section>
 
-          <motion.section
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.5 }}
-            className="text-center space-y-3"
-          >
-            <p className="font-title text-xs uppercase tracking-[0.25em] text-sage-500">Acceso a la app</p>
-            {isFamily ? (
-              <div className="mx-auto max-w-xs rounded-xl border-2 border-dashed border-ink-300 bg-ink-50/60 px-5 py-4">
-                <p className="text-sm font-medium text-ink-600 leading-relaxed">
-                  Más adelante les enviaremos una invitación individual a cada confirmado, que incluirá el código para acceder a la app.
-                </p>
-              </div>
-            ) : (
-              <>
-                <p className="text-sm text-stone-500">
-                  ¡Entrá a la app para ver la galería, subir fotos, completar desafíos y más!
-                </p>
-                <div className="inline-block rounded-xl border-2 border-dashed border-ink-300 px-7 py-3">
-                  <p className="font-mono text-2xl tracking-[0.3em] text-ink-600">{guest.code}</p>
-                </div>
-                <div>
-                  <Link
-                    href="/"
-                    className="font-title inline-flex items-center justify-center rounded-full bg-ink-500 px-8 py-2.5 text-sm uppercase tracking-wide text-white transition hover:bg-ink-600"
-                  >
-                    Entrar a la app
-                  </Link>
-                </div>
-              </>
-            )}
-          </motion.section>
         </div>
       </div>
     </div>
