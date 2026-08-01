@@ -4,6 +4,7 @@ import { z } from 'zod'
 
 const schema = z.object({
   wedding_datetime: z.string().trim().optional().or(z.literal('')),
+  venue_datetime: z.string().trim().optional().or(z.literal('')),
   couple_names: z.string().max(100).trim().optional().or(z.literal('')),
   ceremony_venue: z.string().max(200).trim().optional().or(z.literal('')),
   ceremony_address: z.string().max(300).trim().optional().or(z.literal('')),

@@ -8,6 +8,7 @@ interface Attendee {
   name: string
   phone: string | null
   dietary: string | null
+  attending: boolean
 }
 
 export function FrozenInvitation({ guest }: { guest: Guest }) {
@@ -15,13 +16,16 @@ export function FrozenInvitation({ guest }: { guest: Guest }) {
   const isFamily = guest.invitation_type === 'family'
 
   const attendees: Attendee[] = []
-  if (attending && !isFamily) {
-    attendees.push({ name: guest.name, phone: guest.phone, dietary: guest.dietary_restrictions })
+  if (!isFamily && attending) {
+    attendees.push({ name: guest.name, phone: guest.phone, dietary: guest.dietary_restrictions, attending: true })
   }
   for (const p of guest.plus_ones ?? []) {
-    if (p.rsvp_status === 'attending') {
-      attendees.push({ name: p.name, phone: p.phone, dietary: p.dietary_restrictions })
-    }
+    attendees.push({
+      name: p.name,
+      phone: p.phone,
+      dietary: p.dietary_restrictions,
+      attending: p.rsvp_status === 'attending',
+    })
   }
 
   return (
@@ -51,18 +55,24 @@ export function FrozenInvitation({ guest }: { guest: Guest }) {
               </span>
               <div className="min-w-0 space-y-0.5">
                 <p className="text-sm font-medium text-ink-600 truncate">{a.name}</p>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-stone-500">
-                  {a.phone && (
+                {a.attending ? (
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-stone-500">
+                    {a.phone && (
+                      <span className="flex items-center gap-1">
+                        <Phone className="w-3 h-3" />
+                        {a.phone}
+                      </span>
+                    )}
                     <span className="flex items-center gap-1">
-                      <Phone className="w-3 h-3" />
-                      {a.phone}
+                      <Utensils className="w-3 h-3" />
+                      {a.dietary || 'Sin restricciones'}
                     </span>
-                  )}
-                  <span className="flex items-center gap-1">
-                    <Utensils className="w-3 h-3" />
-                    {a.dietary || 'Sin restricciones'}
+                  </div>
+                ) : (
+                  <span className="inline-block rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-medium text-stone-500">
+                    No asiste
                   </span>
-                </div>
+                )}
               </div>
             </div>
           ))}

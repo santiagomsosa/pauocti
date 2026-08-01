@@ -11,7 +11,11 @@ import { Countdown } from '@/components/invitation/Countdown'
 import { RsvpForm } from '@/components/invitation/RsvpForm'
 import { FrozenInvitation } from '@/components/invitation/FrozenInvitation'
 import { downloadCalendarEvent } from '@/lib/calendar'
+import { familyDisplayName, isPluralGuest } from '@/lib/guest'
 import type { Guest, Settings } from '@/types'
+
+// La fiesta arranca en `venue_datetime` y dura esto; usado para el fin del evento del calendario.
+const PARTY_DURATION_HOURS = 8
 
 function FloatingIcon({
   src,
@@ -35,6 +39,12 @@ function formatShortDate(iso: string): string {
     .replace(/de (\w)/, (_, c) => `de ${c.toUpperCase()}`)
 }
 
+function formatTime(iso: string): string {
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${pad(d.getHours())}:${pad(d.getMinutes())} hs`
+}
+
 
 function CoupleNames({ names }: { names: string }) {
   const parts = names.split(/\s*&\s*/)
@@ -55,12 +65,14 @@ function PlaceCard({
   title,
   name,
   address,
+  time,
   mapUrl,
 }: {
   image: string
   title: string
   name: string | null
   address: string | null
+  time: string | null
   mapUrl: string | null
 }) {
   if (!name && !address && !mapUrl) return null
@@ -76,6 +88,7 @@ function PlaceCard({
         />
       </div>
       <p className="font-title font-semibold text-xs uppercase tracking-wide text-ink-600">{title}</p>
+      {time && <p className="text-xs font-medium text-rose-400">Inicio {time}</p>}
       {name && <p className="text-sm text-stone-700 leading-snug">{name}</p>}
       {address && <p className="text-xs text-stone-500 leading-snug">{address}</p>}
       {mapUrl && (
@@ -143,12 +156,19 @@ export function InvitationView({
 
   const hasTransfer = !!(settings.bank_ars_account || settings.bank_ars_cbu || settings.bank_usd_account || settings.bank_usd_cbu)
   const isFamily = guest.invitation_type === 'family'
+  const isPlural = isPluralGuest(guest)
 
   function handleAgendar() {
-    if (!settings.wedding_datetime) return
+    const eventStart = settings.wedding_datetime ?? settings.venue_datetime
+    if (!eventStart) return
+    const partyStart = new Date(settings.venue_datetime ?? settings.wedding_datetime ?? eventStart)
+    const partyEnd = new Date(partyStart.getTime() + PARTY_DURATION_HOURS * 60 * 60 * 1000)
+    const durationHours = Math.max(1, (partyEnd.getTime() - new Date(eventStart).getTime()) / (60 * 60 * 1000))
+
     downloadCalendarEvent({
       title: `Boda ${coupleNames}`,
-      start: settings.wedding_datetime,
+      start: eventStart,
+      durationHours,
       location: settings.ceremony_address || settings.venue_address || settings.venue,
       description: typeof window !== 'undefined' ? window.location.href : null,
     })
@@ -170,9 +190,9 @@ export function InvitationView({
           sizes="100vw"
           className="object-cover"
         />
-        <div className="absolute inset-x-0 top-[4%] text-center px-4 max-w-md mx-auto">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-rose-50" />
+        <div className="absolute inset-x-0 top-[14%] text-center px-4 max-w-md mx-auto">
           <CoupleNames names={coupleNames} />
-          <p className="font-script text-xl text-ink-500 mt-4">¡Nos casamos!</p>
         </div>
       </motion.div>
 
@@ -197,13 +217,11 @@ export function InvitationView({
           >
             {dateLabel && <p className="text-lg tracking-[0.2em] text-rose-400">{dateLabel}</p>}
             <p className="text-lg text-stone-600">
-              {guest.invitation_type === 'family'
-                ? <>Hola familia <span className="font-medium text-stone-800">{guest.name}</span></>
-                : <>Hola, <span className="font-medium text-stone-800">{guest.name}</span></>}
+              Hola, <span className="font-medium text-stone-800">{familyDisplayName(guest)}</span>
             </p>
             <p className="text-sm text-stone-500 max-w-xs mx-auto leading-relaxed">
-              ¡Cada vez falta menos! Nos alegra muchísimo compartir este día con {isFamily ? 'ustedes' : 'vos'}.
-              {dateLabel && ` Acá ${isFamily ? 'van' : 'vas'} a encontrar toda la información para acompañarnos el ${dateLabel.toLowerCase()}.`}
+              ¡Cada vez falta menos! Nos alegra muchísimo compartir este día con {isPlural ? 'ustedes' : 'vos'}.
+              {dateLabel && ` Acá ${isPlural ? 'van' : 'vas'} a encontrar toda la información para acompañarnos el ${dateLabel.toLowerCase()}.`}
             </p>
           </motion.div>
 
@@ -243,6 +261,7 @@ export function InvitationView({
               title="Ceremonia"
               name={settings.ceremony_venue}
               address={settings.ceremony_address}
+              time={settings.wedding_datetime ? formatTime(settings.wedding_datetime) : null}
               mapUrl={settings.ceremony_map_url}
             />
             {(settings.ceremony_venue || settings.venue) && (
@@ -255,6 +274,7 @@ export function InvitationView({
               title="Fiesta"
               name={settings.venue}
               address={settings.venue_address}
+              time={settings.venue_datetime ? formatTime(settings.venue_datetime) : null}
               mapUrl={settings.venue_map_url}
             />
           </motion.section>
@@ -291,7 +311,7 @@ export function InvitationView({
             >
               <p className="font-title text-2xl uppercase tracking-wide text-ink-600">Regalos</p>
               <p className="text-sm text-stone-500 max-w-xs mx-auto leading-relaxed">
-                {isFamily
+                {isPlural
                   ? <>¡Gracias por acompañarnos en este día tan especial! Para nosotros, compartirlo con ustedes es el mejor regalo. No es necesario que nos hagan un obsequio, pero si desean hacerlo, lo vamos a agradecer muchísimo y lo recibiremos con mucho cariño. Acá abajo van a encontrar algunas opciones.</>
                   : <>¡Gracias por acompañarnos en este día tan especial! Para nosotros, compartirlo con vos es el mejor regalo. No es necesario que nos hagas un obsequio, pero si querés hacerlo, lo vamos a agradecer muchísimo y lo recibiremos con mucho cariño. Acá abajo vas a encontrar algunas opciones.</>}
               </p>
@@ -340,9 +360,11 @@ export function InvitationView({
           >
             <p className="font-title text-xs uppercase tracking-[0.25em] text-sage-500">Acceso a la app</p>
             {isFamily ? (
-              <p className="text-sm text-stone-500 max-w-xs mx-auto leading-relaxed">
-                ¡Entrá a la app para ver la galería, subir fotos, completar desafíos y más!
-              </p>
+              <div className="mx-auto max-w-xs rounded-xl border-2 border-dashed border-ink-300 bg-ink-50/60 px-5 py-4">
+                <p className="text-sm font-medium text-ink-600 leading-relaxed">
+                  Más adelante les enviaremos una invitación individual a cada confirmado, que incluirá el código para acceder a la app.
+                </p>
+              </div>
             ) : (
               <>
                 <p className="text-sm text-stone-500">

@@ -19,6 +19,7 @@ import type { Guest, Challenge, Photo, Message, MusicRequest, Settings, WeddingT
 
 const EMPTY_SETTINGS: Settings = {
   wedding_datetime: null,
+  venue_datetime: null,
   couple_names: null,
   ceremony_venue: null,
   ceremony_address: null,

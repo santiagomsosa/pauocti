@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { familyDisplayName, isPluralGuest } from '@/lib/guest'
 import type { Guest, Settings } from '@/types'
 
 const FROM = process.env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev'
@@ -33,6 +34,7 @@ export async function sendInvitationEmail(guest: Guest, settings: Settings) {
 
   const coupleNames = settings.couple_names ?? 'Nuestra boda'
   const url = invitationUrl(guest.invite_token)
+  const plural = isPluralGuest(guest)
 
   await resend.emails.send({
     from: FROM,
@@ -41,8 +43,8 @@ export async function sendInvitationEmail(guest: Guest, settings: Settings) {
     html: wrapEmail(
       coupleNames,
       `
-        <p style="font-size: 15px; line-height: 1.6;">Hola ${guest.name},</p>
-        <p style="font-size: 15px; line-height: 1.6;">Queremos compartir con vos uno de los días más importantes de nuestras vidas. Ingresá a tu invitación online para ver todos los detalles y confirmar tu asistencia.</p>
+        <p style="font-size: 15px; line-height: 1.6;">Hola ${familyDisplayName(guest)},</p>
+        <p style="font-size: 15px; line-height: 1.6;">Queremos compartir con ${plural ? 'ustedes' : 'vos'} uno de los días más importantes de nuestras vidas. Ingresá a ${plural ? 'la' : 'tu'} invitación online para ver todos los detalles y confirmar ${plural ? 'su' : 'tu'} asistencia.</p>
         <div style="text-align: center; margin: 28px 0;">
           <a href="${url}" style="background: #5f7696; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px;">Ver mi invitación</a>
         </div>
@@ -58,22 +60,23 @@ export async function sendRsvpConfirmationEmail(guest: Guest, settings: Settings
   const coupleNames = settings.couple_names ?? 'Nuestra boda'
   const url = invitationUrl(guest.invite_token)
   const attending = guest.rsvp_status === 'attending'
+  const plural = isPluralGuest(guest)
 
   await resend.emails.send({
     from: FROM,
     to: guest.email,
-    subject: `${coupleNames} · Confirmamos tu respuesta`,
+    subject: `${coupleNames} · Confirmamos ${plural ? 'su' : 'tu'} respuesta`,
     html: wrapEmail(
       coupleNames,
       `
-        <p style="font-size: 15px; line-height: 1.6;">Hola ${guest.name},</p>
+        <p style="font-size: 15px; line-height: 1.6;">Hola ${familyDisplayName(guest)},</p>
         <p style="font-size: 15px; line-height: 1.6;">
           ${attending
-            ? '¡Genial! Confirmamos tu asistencia a nuestra boda.'
-            : 'Registramos que no podrás acompañarnos. ¡Gracias por avisarnos!'}
+            ? `¡Genial! Confirmamos ${plural ? 'su' : 'tu'} asistencia a nuestra boda.`
+            : `Registramos que no ${plural ? 'podrán' : 'podrás'} acompañarnos. ¡Gracias por avisarnos!`}
         </p>
         ${guest.dietary_restrictions ? `<p style="font-size: 14px; color: #78716c;">Restricción alimentaria registrada: ${guest.dietary_restrictions}</p>` : ''}
-        <p style="font-size: 14px; line-height: 1.6;">Podés volver a consultar tu invitación cuando quieras desde este link:</p>
+        <p style="font-size: 14px; line-height: 1.6;">${plural ? 'Pueden' : 'Podés'} volver a consultar ${plural ? 'su' : 'tu'} invitación cuando ${plural ? 'quieran' : 'quieras'} desde este link:</p>
         <div style="text-align: center; margin: 28px 0;">
           <a href="${url}" style="background: #5f7696; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px;">Ver mi invitación</a>
         </div>
@@ -102,7 +105,7 @@ export async function sendReminderEmail(guest: Guest, settings: Settings) {
     html: wrapEmail(
       coupleNames,
       `
-        <p style="font-size: 15px; line-height: 1.6;">Hola ${guest.name},</p>
+        <p style="font-size: 15px; line-height: 1.6;">Hola ${familyDisplayName(guest)},</p>
         <p style="font-size: 15px; line-height: 1.6;">Te recordamos los detalles de nuestra boda:</p>
         ${dateLabel ? `<p style="font-size: 14px;"><strong>Cuándo:</strong> ${dateLabel}</p>` : ''}
         ${settings.venue ? `<p style="font-size: 14px;"><strong>Dónde:</strong> ${settings.venue}</p>` : ''}

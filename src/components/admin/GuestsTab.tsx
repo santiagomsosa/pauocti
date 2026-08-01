@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Trash2, Plus, Loader2, Mail, Phone, Pencil, Check, X, Send, Link2, Download, RotateCcw } from 'lucide-react'
+import { familyDisplayName } from '@/lib/guest'
 import type { Guest, InvitationType, PlusOnePreload, WeddingTable } from '@/types'
 
 function PreloadEditor({
@@ -83,9 +84,7 @@ function isMobileDevice(): boolean {
 function shareViaWhatsapp(guest: Guest) {
   if (!guest.invite_token) return
   const url = `${window.location.origin}/invitacion/${guest.invite_token}`
-  const displayName = guest.invitation_type === 'family' && !/^familia\b/i.test(guest.name)
-    ? `familia ${guest.name}`
-    : guest.name
+  const displayName = familyDisplayName(guest)
   const text = guest.invitation_type === 'family'
     ? `¡Hola, ${displayName}! ¡Nos casamos!\nEn el siguiente link van a encontrar la invitación, toda la información del casamiento y la opción para confirmar su asistencia:\n\n${url}\n\n¡Esperamos que puedan acompañarnos!`
     : `¡Hola, ${guest.name}! ¡Nos casamos!\nEn el siguiente link vas a encontrar la invitación, toda la información del casamiento y la opción para confirmar tu asistencia:\n\n${url}\n\n¡Esperamos que puedas acompañarnos!`
@@ -405,13 +404,18 @@ export function GuestsTab({ guests, setGuests, tables }: GuestsTabProps) {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <Label>{newGuestType === 'family' ? 'Nombre de la familia' : 'Nombre'}</Label>
+            <Label>{newGuestType === 'family' ? 'Apellido de la familia' : 'Nombre'}</Label>
             <Input
-              placeholder={newGuestType === 'family' ? 'Ej: Familia García' : 'Ej: María García'}
+              placeholder={newGuestType === 'family' ? 'Ej: García' : 'Ej: María García'}
               value={newGuestName}
               onChange={(e) => setNewGuestName(e.target.value)}
               disabled={addingGuest}
             />
+            {newGuestType === 'family' && (
+              <p className="text-xs text-stone-400">
+                No hace falta escribir &quot;Familia&quot;: se va a mostrar como &quot;Familia {newGuestName.trim() || 'García'}&quot; en todos lados.
+              </p>
+            )}
           </div>
           <div className="space-y-1">
             <Label>{newGuestType === 'family' ? 'Correo de contacto' : 'Correo'}</Label>
@@ -606,6 +610,11 @@ export function GuestsTab({ guests, setGuests, tables }: GuestsTabProps) {
                       <option value="individual">Individual</option>
                       <option value="family">Familia</option>
                     </select>
+                    {editType === 'family' && (
+                      <p className="text-xs text-stone-400">
+                        Se va a mostrar como &quot;{familyDisplayName({ name: g.name, invitation_type: 'family' })}&quot; en todos lados (no hace falta que el nombre ya diga &quot;Familia&quot;).
+                      </p>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">

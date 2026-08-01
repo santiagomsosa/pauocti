@@ -3,6 +3,7 @@ import type { Settings } from '@/types'
 
 const KEYS: (keyof Settings)[] = [
   'wedding_datetime',
+  'venue_datetime',
   'couple_names',
   'ceremony_venue',
   'ceremony_address',
