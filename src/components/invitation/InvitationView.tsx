@@ -53,7 +53,7 @@ function CoupleNames({ names }: { names: string }) {
       <h1 className="absolute inset-0 pointer-events-none">
         <span
           className="absolute whitespace-nowrap font-script text-ink-600 leading-none"
-          style={{ left: '34%', top: '10%', fontSize: 'clamp(2rem, 6.15vw, 10rem)' }}
+          style={{ left: '34%', top: '10%', fontSize: 'clamp(2.3rem, 7.3vw, 12rem)' }}
         >
           {parts[0]}
         </span>
@@ -339,7 +339,7 @@ export function InvitationView({
                   onClick={() => setTransferOpen(true)}
                   className="font-title inline-flex items-center gap-1.5 rounded-full border border-ink-300 px-5 py-2 text-sm uppercase tracking-wide text-ink-600 transition hover:bg-ink-100/50"
                 >
-                  Ver CBU
+                  Ver datos bancarios
                 </button>
               </div>
               <Dialog open={transferOpen} onOpenChange={(open) => setTransferOpen(open)}>
