@@ -371,7 +371,8 @@ export function GuestsTab({ guests, setGuests, tables }: GuestsTabProps) {
     setBusyId(null)
   }
 
-  async function sendInvitation(id: string) {
+  async function sendInvitation(id: string, name: string) {
+    if (!confirm(`¿Enviar invitación a ${name}?`)) return
     setBusyId(id)
     const res = await fetch('/api/admin/invitation/send', {
       method: 'POST',
@@ -577,7 +578,7 @@ export function GuestsTab({ guests, setGuests, tables }: GuestsTabProps) {
                     <WhatsappIcon className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => sendInvitation(g.id)}
+                    onClick={() => sendInvitation(g.id, g.name)}
                     disabled={busyId === g.id || !g.email}
                     title={g.email ? 'Enviar invitación' : 'Sin correo cargado'}
                     className="text-stone-300 hover:text-ink-500 disabled:opacity-30 transition-colors"
