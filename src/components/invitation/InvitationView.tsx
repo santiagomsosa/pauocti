@@ -33,16 +33,32 @@ function FloatingIcon({
   )
 }
 
+// Los horarios siempre se muestran en la zona horaria de Argentina, sin importar
+// dónde esté el dispositivo del invitado.
+const ARGENTINA_TIME_ZONE = 'America/Argentina/Buenos_Aires'
+
 function formatShortDate(iso: string): string {
   const d = new Date(iso)
-  return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+  return d.toLocaleDateString('es-ES', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: ARGENTINA_TIME_ZONE,
+  })
     .replace(/de (\w)/, (_, c) => `de ${c.toUpperCase()}`)
 }
 
 function formatTime(iso: string): string {
   const d = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${pad(d.getHours())}:${pad(d.getMinutes())} hs`
+  const parts = new Intl.DateTimeFormat('es-AR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: ARGENTINA_TIME_ZONE,
+  }).formatToParts(d)
+  const hour = parts.find((p) => p.type === 'hour')?.value ?? '00'
+  const minute = parts.find((p) => p.type === 'minute')?.value ?? '00'
+  return `${hour}:${minute} hs`
 }
 
 
