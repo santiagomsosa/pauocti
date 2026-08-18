@@ -150,12 +150,12 @@ function CopyField({ label, value }: { label: string; value: string }) {
     <button
       type="button"
       onClick={copy}
-      className="flex w-full items-center justify-between gap-3 border-b border-stone-200/70 py-2 text-left"
+      className="flex w-full flex-col items-start gap-1 border-b border-stone-200/70 py-2 text-left"
     >
       <span className="font-title text-xs uppercase tracking-wide text-stone-400">{label}</span>
-      <span className="flex items-center gap-2 text-sm font-medium text-stone-700">
-        {value}
-        <Copy className="w-3.5 h-3.5 text-ink-400" />
+      <span className="flex w-full items-center gap-2 text-sm font-medium text-stone-700">
+        <span className="break-all">{value}</span>
+        <Copy className="w-3.5 h-3.5 shrink-0 text-ink-400" />
       </span>
     </button>
   )
@@ -163,9 +163,9 @@ function CopyField({ label, value }: { label: string; value: string }) {
 
 function StaticField({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex w-full items-center justify-between gap-3 border-b border-stone-200/70 py-2">
+    <div className="flex w-full flex-col items-start gap-1 border-b border-stone-200/70 py-2">
       <span className="font-title text-xs uppercase tracking-wide text-stone-400">{label}</span>
-      <span className="text-sm font-medium text-stone-700">{value}</span>
+      <span className="text-sm font-medium text-stone-700 break-all">{value}</span>
     </div>
   )
 }
@@ -359,7 +359,7 @@ export function InvitationView({
                 </button>
               </div>
               <Dialog open={transferOpen} onOpenChange={(open) => setTransferOpen(open)}>
-                <DialogContent className="max-w-lg max-h-[90dvh] overflow-y-auto">
+                <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[90dvh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle className="font-title text-xl uppercase tracking-wide text-ink-600">
                       Datos para transferencia
