@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Trash2, Plus, Loader2, Mail, Phone, Pencil, Check, X, Send, Link2, Download, RotateCcw, LineChart } from 'lucide-react'
+import { Trash2, Plus, Loader2, Mail, Phone, Pencil, Check, X, Send, Link2, Download, RotateCcw, LineChart, Search } from 'lucide-react'
 import { familyDisplayName, isPluralGuest } from '@/lib/guest'
 import type { Guest, InvitationType, PlusOnePreload, WeddingTable } from '@/types'
 
@@ -181,6 +181,7 @@ export function GuestsTab({ guests, setGuests, tables }: GuestsTabProps) {
   const [editPreload, setEditPreload] = useState<PlusOnePreload[]>([])
   const [editTableId, setEditTableId] = useState<string>('')
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null)
   const [editMemberName, setEditMemberName] = useState('')
   const [editMemberTableId, setEditMemberTableId] = useState('')
@@ -388,6 +389,22 @@ export function GuestsTab({ guests, setGuests, tables }: GuestsTabProps) {
     setBusyId(null)
   }
 
+  const normalizedSearch = search.trim().toLowerCase()
+  const filteredGuests = normalizedSearch
+    ? guests.filter((g) => {
+        const haystack = [
+          g.name,
+          g.email ?? '',
+          g.phone ?? '',
+          ...(g.plus_ones ?? []).map((p) => p.name),
+          ...(g.plus_ones_preload ?? []).map((p) => p.name),
+        ]
+          .join(' ')
+          .toLowerCase()
+        return haystack.includes(normalizedSearch)
+      })
+    : guests
+
   return (
     <div className="space-y-4">
       <form onSubmit={addGuest} className="bg-white rounded-xl p-4 shadow-sm space-y-3">
@@ -523,11 +540,23 @@ export function GuestsTab({ guests, setGuests, tables }: GuestsTabProps) {
         </div>
       </div>
 
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-400" />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar invitado por nombre, email o teléfono..."
+          className="pl-9"
+        />
+      </div>
+
       <div className="bg-white rounded-xl shadow-sm divide-y">
-        {guests.length === 0 ? (
-          <p className="p-4 text-sm text-stone-400 text-center">No hay invitados aún</p>
+        {filteredGuests.length === 0 ? (
+          <p className="p-4 text-sm text-stone-400 text-center">
+            {guests.length === 0 ? 'No hay invitados aún' : 'Sin resultados para tu búsqueda'}
+          </p>
         ) : (
-          guests.map((g) => (
+          filteredGuests.map((g) => (
             <div key={g.id} className="px-4 py-3 space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
