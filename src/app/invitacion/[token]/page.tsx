@@ -1,10 +1,25 @@
 import { notFound } from 'next/navigation'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { createServerClient } from '@/lib/supabase/server'
 import { getSettings } from '@/lib/settings'
 import { ADMIN_COOKIE } from '@/lib/auth'
 import { InvitationView } from '@/components/invitation/InvitationView'
 import type { Guest, GuestOpen } from '@/types'
+
+// Bots que generan la vista previa del link al compartirlo por chat/redes: no son
+// visitas reales del invitado y no deben contar como "apertura".
+const LINK_PREVIEW_BOT_PATTERN =
+  /whatsapp|facebookexternalhit|facebot|telegrambot|slackbot|twitterbot|linkedinbot|discordbot|skypeuripreview|pinterest|embedly|quora link preview|outbrain|w3c_validator|redditbot|applebot|bot\/|crawler|spider|preview/i
+
+// Evita que recargas/reintentos del mismo dispositivo en un lapso corto se cuenten
+// como aperturas distintas.
+const MIN_MS_BETWEEN_OPENS = 5 * 60 * 1000
+
+function wasOpenedRecently(opens: GuestOpen[]): boolean {
+  if (opens.length === 0) return false
+  const lastOpenAt = new Date(opens[opens.length - 1].at).getTime()
+  return Date.now() - lastOpenAt < MIN_MS_BETWEEN_OPENS
+}
 
 export default async function InvitationPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
@@ -20,11 +35,18 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
     notFound()
   }
 
-  // No contamos como "apertura" cuando el admin abre el link para previsualizarlo
+  // No contamos como "apertura" cuando el admin abre el link para previsualizarlo,
+  // ni cuando el request viene de un bot de preview de links, ni si ya se registró
+  // una apertura hace muy poco tiempo.
   const cookieStore = await cookies()
-  if (!cookieStore.get(ADMIN_COOKIE)) {
+  const headerStore = await headers()
+  const userAgent = headerStore.get('user-agent') ?? ''
+  const isPreviewBot = LINK_PREVIEW_BOT_PATTERN.test(userAgent)
+
+  const opens: GuestOpen[] = Array.isArray(guest.opens) ? guest.opens : []
+
+  if (!cookieStore.get(ADMIN_COOKIE) && !isPreviewBot && !wasOpenedRecently(opens)) {
     try {
-      const opens: GuestOpen[] = Array.isArray(guest.opens) ? guest.opens : []
       await supabase
         .from('guests')
         .update({ opens: [...opens, { at: new Date().toISOString() }] })
