@@ -33,6 +33,7 @@ const patchSchema = z.object({
   table_id: z.string().uuid().nullable().optional(),
   dietary_restrictions: optionalStr(500),
   rsvp_status: z.enum(['attending', 'declined', 'pending']).optional(),
+  early_access: z.boolean().optional(),
 })
 
 export async function GET() {
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json()
-    const { id, name, email, phone, invitation_type, max_plus_ones, is_active, plus_ones_preload, table_id, dietary_restrictions, rsvp_status } =
+    const { id, name, email, phone, invitation_type, max_plus_ones, is_active, plus_ones_preload, table_id, dietary_restrictions, rsvp_status, early_access } =
       patchSchema.parse(body)
 
     const update: Record<string, unknown> = {}
@@ -117,6 +118,7 @@ export async function PATCH(request: NextRequest) {
     if (table_id !== undefined) update.table_id = table_id || null
     if (dietary_restrictions !== undefined) update.dietary_restrictions = dietary_restrictions || null
     if (rsvp_status !== undefined) update.rsvp_status = rsvp_status
+    if (early_access !== undefined) update.early_access = early_access
 
     if (Object.keys(update).length === 0) {
       return NextResponse.json({ error: 'Nada para actualizar' }, { status: 400 })

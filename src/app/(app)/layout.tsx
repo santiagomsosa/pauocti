@@ -1,8 +1,13 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Navbar } from '@/components/Navbar'
+import { WaitingRoom } from '@/components/WaitingRoom'
 import { WatercolorBranch, GoldDots } from '@/components/decorations'
-import type { GuestSession } from '@/types'
+import { canAccessApp, getAppOpensAt } from '@/lib/app-access'
+import { isPluralGuest } from '@/lib/guest'
+import { getSettings } from '@/lib/settings'
+import { createServerClient } from '@/lib/supabase/server'
+import type { Guest, GuestSession } from '@/types'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies()
@@ -19,6 +24,29 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   if (!session) {
     redirect('/')
+  }
+
+  // Hasta la hora de la fiesta solo entran los invitados con acceso anticipado (Early Bird).
+  // El permiso se lee de la base en cada carga: activarlo o quitarlo aplica al instante.
+  const [settings, guestRes] = await Promise.all([
+    getSettings(),
+    createServerClient()
+      .from('guests')
+      .select('early_access, invitation_type, max_plus_ones')
+      .eq('id', session.guestId)
+      .maybeSingle(),
+  ])
+  const guest = guestRes.data as Pick<Guest, 'early_access' | 'invitation_type' | 'max_plus_ones'> | null
+
+  if (!canAccessApp(guest, settings)) {
+    return (
+      <WaitingRoom
+        guestName={session.guestName}
+        coupleNames={settings.couple_names ?? process.env.NEXT_PUBLIC_COUPLE_NAMES ?? 'Boda'}
+        opensAt={getAppOpensAt(settings)!.toISOString()}
+        plural={guest ? isPluralGuest(guest) : false}
+      />
+    )
   }
 
   return (
