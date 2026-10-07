@@ -30,6 +30,7 @@ export interface Guest {
   rsvp_submitted_at: string | null
   plus_ones_preload: PlusOnePreload[]
   table_id: string | null
+  early_access: boolean
   opens: GuestOpen[]
   plus_ones?: Guest[]
 }

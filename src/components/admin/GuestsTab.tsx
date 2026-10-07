@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Trash2, Plus, Loader2, Mail, Phone, Pencil, Check, X, Send, Link2, Download, RotateCcw, LineChart, Search } from 'lucide-react'
+import { Trash2, Plus, Loader2, Mail, Phone, Pencil, Check, X, Send, Link2, Download, RotateCcw, LineChart, Search, Bird } from 'lucide-react'
 import { familyDisplayName, isPluralGuest } from '@/lib/guest'
 import type { Guest, InvitationType, PlusOnePreload, WeddingTable } from '@/types'
 
@@ -350,6 +350,26 @@ export function GuestsTab({ guests, setGuests, tables }: GuestsTabProps) {
     setBusyId(null)
   }
 
+  async function toggleEarlyAccess(id: string, value: boolean) {
+    setBusyId(id)
+    const res = await fetch('/api/admin/guests', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, early_access: value }),
+    })
+    if (res.ok) {
+      setGuests((prev) => prev.map((g) => ({
+        ...g,
+        early_access: g.id === id ? value : g.early_access,
+        plus_ones: g.plus_ones?.map((p) => (p.id === id ? { ...p, early_access: value } : p)) ?? [],
+      })))
+      toast.success(value ? 'Acceso anticipado activado' : 'Acceso anticipado desactivado')
+    } else {
+      toast.error('No se pudo cambiar el acceso anticipado')
+    }
+    setBusyId(null)
+  }
+
   async function resetRsvp(id: string) {
     if (!confirm('¿Sacar la confirmación? El invitado podrá volver a confirmar su asistencia.')) return
     setBusyId(id)
@@ -565,6 +585,9 @@ export function GuestsTab({ guests, setGuests, tables }: GuestsTabProps) {
                     {g.invitation_type === 'family' && (
                       <Badge className="text-[10px] px-1.5 py-0 h-4 bg-ink-100 text-ink-600">Familia</Badge>
                     )}
+                    {g.early_access && (
+                      <Badge className="text-[10px] px-1.5 py-0 h-4 bg-sage-100 text-sage-600">Early Bird</Badge>
+                    )}
                     <Badge className={`text-[10px] px-1.5 py-0 h-4 ${STATUS_VARIANT[g.rsvp_status]}`}>
                       {STATUS_LABEL_ES[g.rsvp_status]}
                     </Badge>
@@ -590,6 +613,17 @@ export function GuestsTab({ guests, setGuests, tables }: GuestsTabProps) {
                   )}
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
+                  {g.invitation_type !== 'family' && (
+                    <button
+                      onClick={() => toggleEarlyAccess(g.id, !g.early_access)}
+                      disabled={busyId === g.id}
+                      aria-pressed={g.early_access}
+                      title={g.early_access ? 'Quitar acceso anticipado (Early Bird)' : 'Dar acceso anticipado (Early Bird)'}
+                      className={`disabled:opacity-30 transition-colors ${g.early_access ? 'text-sage-500 hover:text-sage-600' : 'text-stone-300 hover:text-sage-500'}`}
+                    >
+                      <Bird className="w-4 h-4" />
+                    </button>
+                  )}
                   <button
                     onClick={() => copyInviteLink(g)}
                     disabled={!g.invite_token}
@@ -773,6 +807,9 @@ export function GuestsTab({ guests, setGuests, tables }: GuestsTabProps) {
                             <Badge className={`text-[10px] px-1.5 py-0 h-4 ${STATUS_VARIANT[p.rsvp_status]}`}>
                               {STATUS_LABEL_ES[p.rsvp_status]}
                             </Badge>
+                            {p.early_access && (
+                              <Badge className="text-[10px] px-1.5 py-0 h-4 bg-sage-100 text-sage-600">Early Bird</Badge>
+                            )}
                             {p.table_id && tables.find((t) => t.id === p.table_id) && (
                               <Badge className="text-[10px] px-1.5 py-0 h-4 bg-amber-100 text-amber-700">
                                 {tables.find((t) => t.id === p.table_id)!.name}
@@ -787,6 +824,15 @@ export function GuestsTab({ guests, setGuests, tables }: GuestsTabProps) {
                           )}
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0">
+                          <button
+                            onClick={() => toggleEarlyAccess(p.id, !p.early_access)}
+                            disabled={busyId === p.id}
+                            aria-pressed={p.early_access}
+                            title={p.early_access ? 'Quitar acceso anticipado (Early Bird)' : 'Dar acceso anticipado (Early Bird)'}
+                            className={`disabled:opacity-30 transition-colors ${p.early_access ? 'text-sage-500 hover:text-sage-600' : 'text-stone-300 hover:text-sage-500'}`}
+                          >
+                            <Bird className="w-4 h-4" />
+                          </button>
                           <button
                             onClick={() => copyInviteLink(p)}
                             disabled={!p.invite_token}

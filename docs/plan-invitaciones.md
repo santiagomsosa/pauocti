@@ -110,10 +110,12 @@ En `api/auth/login` rechazar guests con `is_active=false` ("Tu acceso todavía n
    - **Link directo a la invitación** (`/invitacion/[invite_token]`) para que pueda consultarla siempre que quiera.
    - Solo se manda si el invitado tiene `email` cargado; el fallo de envío no debe romper el guardado del RSVP.
 
-3. **Recordatorio** — `POST /api/admin/reminder/send` (manual desde el admin): se envía a los invitados **activados** (`is_active=true`), con:
-   - Información resumida de la invitación (fecha/hora, link).
-   - Información complementaria del lugar: dirección, **mapa/link a Google Maps**, indicaciones para llegar.
-   - Estos datos del lugar salen de `settings` (`venue`, `venue_address`, y un nuevo `venue_map_url`).
+3. **Recordatorio** — `POST /api/admin/reminder/send` (manual desde el admin). Se envía solo a quienes **confirmaron asistencia** (`rsvp_status='attending'`), no a todos los activos. Contenido, en este orden (diseño y detalle en la sección 8):
+   - Fecha, saludo y texto de bienvenida.
+   - **Cuenta regresiva** en días hasta el evento.
+   - Ceremonia y fiesta: horario, lugar, dirección y **mapa/link a Google Maps** (salen de `settings`).
+   - Explicación de **la app de la boda**: trivia, retos y premios.
+   - **Código de acceso** y botón **"¡Entrar a la fiesta!"** a la app.
 
 > Sumar `venue_map_url` a la tabla `settings` y a la pestaña de Configuración del admin.
 
@@ -139,8 +141,75 @@ En `api/auth/login` rechazar guests con `is_active=false` ("Tu acceso todavía n
 
 ---
 
+## 8. Rediseño del correo de recordatorio
+
+Objetivo: que el recordatorio use el mismo estilo que la invitación y la app, e incluya el acceso a la app. Hay una propuesta navegable (individual y familia, escritorio y celular) con datos de invitados reales; no se envió nada productivo.
+
+### Diseño
+
+Mismo lenguaje visual que `InvitationView`: imagen de encabezado con "Paula & Octavio" en la tipografía manuscrita, fondo degradado rosa → crema → salvia, divisor botánico, ilustraciones en acuarela, tipografías Cinzel (títulos), Lora (texto) y Montserrat (código y botones), y la paleta `ink` / `rose` / `sage` / `sand` / `cream` de `globals.css`.
+
+Orden de las secciones:
+
+1. Encabezado, fecha (grande), saludo y texto: "¡Falta cada vez menos! Nos hace muy felices que nos acompañes en este día tan especial para nosotros. Esto es todo lo que necesitás saber."
+2. Cuenta regresiva ("Faltan N días" + día y hora).
+3. Ceremonia y fiesta, con "Cómo llegar".
+4. La app de la boda: Trivia, Retos, Premios (y una línea sobre galería, muro y música).
+5. Código de acceso + botón **"¡Entrar a la fiesta!"**.
+6. Cierre con link a "Ver mi invitación".
+
+Variantes:
+
+- **Individual** (o con +1): una tarjeta con su código y un botón. Textos en singular o plural según `isPluralGuest`.
+- **Familia** (`invitation_type='family'`): una tarjeta con un renglón por integrante confirmado (nombre, código y botón "Entrar"), porque cada integrante entra con su propio código.
+
+Asunto: `{couple_names} · ¡Faltan N días!`, con N calculado al enviar (días de calendario en hora argentina). Si el evento es hoy o ya pasó, se usa `¡Ya falta poco!`.
+
+### Restricciones de implementación
+
+- HTML con **tablas y estilos inline** (lo único que respetan Gmail y Outlook), con un `@media` mínimo para celular. No usar Tailwind ni componentes React.
+- Las imágenes se cargan por URL absoluta desde `NEXT_PUBLIC_APP_URL`, así que tienen que estar publicadas antes de enviar. Se generan versiones livianas en `public/email/` (los originales de `public/invitacion/` pesan ~2 MB cada uno):
+  - `header.jpg`: el encabezado con los nombres ya impresos (los clientes de correo no cargan la tipografía manuscrita), unos 120 KB.
+  - `divider.png`: divisor botánico.
+  - `iglesia.png` y `fiesta.png`: recortes circulares.
+  - Íconos: `disco`, `camara`, `sparklers`.
+- La cuenta regresiva es un número fijo calculado al enviar: un correo no puede ejecutar JavaScript.
+- Horarios siempre en `America/Argentina/Buenos_Aires` (igual que la invitación).
+- Escapar todo valor dinámico (nombres, direcciones) al armar el HTML.
+- Texto de preheader con el código, para que se vea en la bandeja de entrada.
+
+### Cambios de código
+
+1. `public/email/`: agregar las imágenes optimizadas.
+2. `src/lib/email.ts`: reemplazar el cuerpo de `sendReminderEmail` por la nueva plantilla. Recibe además la lista de integrantes (para familias). Mantener `wrapEmail` para los otros dos correos, o migrarlos más adelante.
+3. `src/app/api/admin/reminder/send/route.ts`:
+   - Filtrar por `rsvp_status='attending'` (hoy manda a todos los activos con email, incluidos los que declinaron o no respondieron).
+   - Para familias, adjuntar los integrantes confirmados con su código.
+   - Enviar en tandas en vez de un `Promise.all` de todos los correos juntos, por los límites de Resend.
+4. `src/app/page.tsx` (login): leer `?code=` de la URL y completar el campo, para que el botón del correo deje el código listo. Definir si además entra directo o solo completa el campo.
+5. Vista previa para admin: `GET /api/admin/reminder/preview?guestId=…` que devuelve el HTML sin enviar, y un envío de prueba solo al email del admin antes del envío masivo.
+6. `SettingsTab.tsx`: actualizar el texto de la sección "Recordatorio" (hoy dice "fecha, el lugar y el mapa") y mostrar cuántos correos se van a enviar antes de confirmar.
+
+### Pendientes de decisión
+
+- **Trivia:** no existe todavía en el código de la app. Si no llega a la boda, hay que quitarla del texto del correo.
+- **Ícono de la trivia:** se usó la bola de disco; no hay una ilustración específica.
+- **Integrantes de familia con email propio:** definir si reciben además un correo individual o solo el de la familia con todos los códigos.
+- **Login con `?code=`:** definir si entra directo o solo completa el campo.
+
+## 9. App cerrada hasta la fiesta y acceso anticipado (implementado)
+
+- **Apertura:** la app se abre a la hora de la fiesta (`venue_datetime`; si falta, `wedding_datetime`). Hasta entonces, cualquier invitado que haya iniciado sesión ve `WaitingRoom` (cuenta regresiva hasta esa hora, qué se podrá hacer ese día y botón para salir) en lugar de la app. Al llegar la hora la página se refresca sola.
+- **Dónde se bloquea:** solo en las páginas, en `src/app/(app)/layout.tsx`. Las APIs de invitados no se bloquean a propósito: no se espera abuso en una app de boda.
+- **Early Bird:** columna `guests.early_access` (migración `011`). En el admin, pestaña Invitados, el botón del pájaro la activa o desactiva por persona (titulares individuales, acompañantes e integrantes de familia; no en la fila de la familia) y la lista muestra la insignia "Early Bird". El permiso se lee de la base en cada carga, sin volver a iniciar sesión.
+- **Sesión:** dura hasta las 23:59 del 16/11 (hora argentina), calculado como fecha de la fiesta + 2 días, con un mínimo de 7 días. Ver `getSessionMaxAge` en `src/lib/app-access.ts`.
+- **Link del correo:** el login lee `?code=` y completa el campo. La persona solo aprieta "¡Entrar a la fiesta!".
+- **Probar en local:** `APP_OPENS_AT_OVERRIDE=<fecha ISO>` (solo fuera de producción) fuerza la hora de apertura sin tocar la configuración real. Con una fecha pasada la app se ve abierta; con una futura, cerrada.
+
+---
+
 ## Setup necesario
 
 - Cuenta en **Resend** + `RESEND_API_KEY` (idealmente dominio verificado).
-- Correr la migración `003` en Supabase.
+- Correr las migraciones en Supabase (`003` en adelante; la `011` agrega `early_access`).
 - `npm install motion`.

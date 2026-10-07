@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { encodeSession, SESSION_COOKIE } from '@/lib/auth'
+import { getSettings } from '@/lib/settings'
+import { getSessionMaxAge } from '@/lib/app-access'
 import { z } from 'zod'
 
 const schema = z.object({
@@ -27,6 +29,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Tu acceso todavía no está habilitado.' }, { status: 403 })
     }
 
+    const settings = await getSettings()
     const session = encodeSession({ guestId: guest.id, guestName: guest.name })
 
     const response = NextResponse.json({ success: true })
@@ -34,7 +37,7 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: getSessionMaxAge(settings),
       path: '/',
     })
 
