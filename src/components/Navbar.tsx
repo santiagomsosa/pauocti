@@ -5,7 +5,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import { Home, Images, Heart, Trophy, Music, LogOut } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { LeafSprig } from '@/components/decorations'
 
 function NavCoupleNames({ names }: { names: string }) {
   const parts = names.split(/\s*&\s*/)
@@ -47,7 +46,6 @@ export function Navbar({ guestName }: NavbarProps) {
       <header className="fixed top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-b border-cream-200 px-4 py-3 flex items-center justify-between">
         <Link href="/inicio" className="flex items-center gap-1.5 font-script text-2xl text-stone-800">
           <NavCoupleNames names={process.env.NEXT_PUBLIC_COUPLE_NAMES ?? 'Boda'} />
-          <LeafSprig className="w-4 h-5 text-sage-400 -rotate-12" />
         </Link>
         <div className="flex items-center gap-3">
           <span className="text-sm text-stone-500 hidden sm:block">{guestName}</span>

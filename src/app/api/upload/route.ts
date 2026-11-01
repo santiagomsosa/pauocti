@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { getGuestSession } from '@/lib/auth'
+import { PHOTO_CAPTION_MAX_LENGTH } from '@/types'
 
 export async function POST(request: NextRequest) {
   const session = await getGuestSession()
@@ -12,6 +13,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const file = formData.get('file') as File | null
     const challengeId = formData.get('challengeId') as string | null
+    const caption = String(formData.get('caption') ?? '').trim().slice(0, PHOTO_CAPTION_MAX_LENGTH) || null
 
     if (!file) {
       return NextResponse.json({ error: 'No se proporcionó un archivo' }, { status: 400 })
@@ -49,6 +51,7 @@ export async function POST(request: NextRequest) {
         url: publicUrl,
         storage_path: storagePath,
         challenge_id: challengeId || null,
+        caption,
       })
       .select()
       .single()
