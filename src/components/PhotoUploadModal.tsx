@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { Upload, X, Loader2, ImageIcon, Trophy } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import type { Challenge, Photo } from '@/types'
+import { PHOTO_CAPTION_MAX_LENGTH, type Challenge, type Photo } from '@/types'
 
 interface Props {
   open: boolean
@@ -22,6 +22,7 @@ export function PhotoUploadModal({ open, onClose, onUploaded, challenge }: Props
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(
     challenge?.id ?? null
   )
+  const [caption, setCaption] = useState('')
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -43,6 +44,7 @@ export function PhotoUploadModal({ open, onClose, onUploaded, challenge }: Props
   function handleClose() {
     setPreview(null)
     setFile(null)
+    setCaption('')
     setSelectedChallengeId(challenge?.id ?? null)
     onClose()
   }
@@ -53,6 +55,7 @@ export function PhotoUploadModal({ open, onClose, onUploaded, challenge }: Props
     try {
       const formData = new FormData()
       formData.append('file', file)
+      if (caption.trim()) formData.append('caption', caption.trim())
       if (selectedChallengeId) {
         formData.append('challengeId', selectedChallengeId)
       }
@@ -117,6 +120,25 @@ export function PhotoUploadModal({ open, onClose, onUploaded, challenge }: Props
             className="hidden"
             onChange={handleFileChange}
           />
+
+          {/* Texto de la polaroid */}
+          <div className="space-y-1.5">
+            <label htmlFor="photo-caption" className="text-sm text-stone-600">
+              Escribile algo <span className="text-stone-400">(opcional)</span>
+            </label>
+            <input
+              id="photo-caption"
+              type="text"
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              maxLength={PHOTO_CAPTION_MAX_LENGTH}
+              placeholder="¡Vivan los novios!"
+              className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 font-pen text-base leading-none text-stone-800 placeholder:text-stone-300 focus:outline-none focus:ring-2 focus:ring-ink-200"
+            />
+            <p className="text-right text-[11px] text-stone-400">
+              {caption.length}/{PHOTO_CAPTION_MAX_LENGTH}
+            </p>
+          </div>
 
           {/* Link a desafíos */}
           {!challenge && (

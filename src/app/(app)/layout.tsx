@@ -2,7 +2,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Navbar } from '@/components/Navbar'
 import { WaitingRoom } from '@/components/WaitingRoom'
-import { WatercolorBranch, GoldDots } from '@/components/decorations'
+import { WatercolorCorner } from '@/components/decorations'
 import { canAccessApp, getAppOpensAt } from '@/lib/app-access'
 import { isPluralGuest } from '@/lib/guest'
 import { getSettings } from '@/lib/settings'
@@ -52,10 +52,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen flex flex-col bg-cream-50">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <WatercolorBranch className="absolute -top-8 -left-12 w-56 h-56 opacity-90" />
-        <WatercolorBranch className="absolute -bottom-12 -right-10 w-64 h-64 rotate-180 opacity-90" />
-        <GoldDots className="absolute top-24 right-4 w-24 h-14 opacity-90" />
-        <GoldDots className="absolute bottom-28 left-6 w-24 h-14 rotate-180 opacity-90" />
+        <WatercolorCorner variant="hojas" className="absolute top-14 -left-10 w-48 md:w-72 h-auto opacity-60" />
+        <WatercolorCorner variant="flores" className="absolute bottom-16 -right-6 w-52 md:w-72 h-auto rotate-180 opacity-75" />
       </div>
       <Navbar guestName={session.guestName} />
       {/* pt para el header, pb para el bottom nav */}
