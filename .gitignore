@@ -48,3 +48,5 @@ supabase/.temp
 
 # reference material (not part of the app)
 .refs
+# backups locales de fotos (npm run backup:photos)
+/backups/
