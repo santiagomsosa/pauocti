@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import { toast } from 'sonner'
-import { Plus, Camera, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, Camera, X, ChevronLeft, ChevronRight, Trash2, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { PhotoUploadModal } from '@/components/PhotoUploadModal'
@@ -43,14 +43,27 @@ function Lightbox({
   onClose,
   onPrev,
   onNext,
+  onDelete,
 }: {
   photos: Photo[]
   index: number
   onClose: () => void
   onPrev: () => void
   onNext: () => void
+  onDelete: (photo: Photo) => Promise<void>
 }) {
   const photo = photos[index]
+  // Se guarda el id de la foto en confirmación: al pasar a otra foto la confirmación se cancela sola.
+  const [confirmingId, setConfirmingId] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const confirmingDelete = confirmingId === photo.id
+
+  async function handleDelete() {
+    setDeleting(true)
+    await onDelete(photo)
+    setDeleting(false)
+    setConfirmingId(null)
+  }
   const touchStartX = useRef<number | null>(null)
   const touchStartY = useRef<number | null>(null)
 
@@ -102,12 +115,41 @@ function Lightbox({
             </p>
           )}
         </div>
-        <button
-          onClick={onClose}
-          className="ml-3 flex-shrink-0 rounded-full bg-white/10 p-2 active:bg-white/20"
-        >
-          <X className="w-5 h-5 text-white" />
-        </button>
+        <div className="ml-3 flex flex-shrink-0 items-center gap-2">
+          {photo.mine &&
+            (confirmingDelete ? (
+              <>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="flex items-center gap-1.5 rounded-full bg-red-500 px-3 py-2 text-sm font-medium text-white active:bg-red-600 disabled:opacity-60"
+                >
+                  {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Borrar foto
+                </button>
+                <button
+                  onClick={() => setConfirmingId(null)}
+                  disabled={deleting}
+                  className="rounded-full bg-white/10 px-3 py-2 text-sm text-white active:bg-white/20"
+                >
+                  Cancelar
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setConfirmingId(photo.id)}
+                aria-label="Borrar mi foto"
+                className="rounded-full bg-white/10 p-2 active:bg-white/20"
+              >
+                <Trash2 className="w-5 h-5 text-white" />
+              </button>
+            ))}
+          {!confirmingDelete && (
+            <button onClick={onClose} aria-label="Cerrar" className="rounded-full bg-white/10 p-2 active:bg-white/20">
+              <X className="w-5 h-5 text-white" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Image */}
@@ -215,6 +257,18 @@ export default function GaleriaPage() {
     setLightboxIndex((i) => (i !== null && i < photos.length - 1 ? i + 1 : i))
   }
 
+  async function deleteOwnPhoto(photo: Photo) {
+    const res = await fetch(`/api/photos/${photo.id}`, { method: 'DELETE' }).catch(() => null)
+    if (!res?.ok) {
+      toast.error('No se pudo borrar la foto. Probá de nuevo.')
+      return
+    }
+    setPhotos((prev) => prev.filter((p) => p.id !== photo.id))
+    // Se queda en la foto que ocupa ahora ese lugar, o cierra si era la última.
+    setLightboxIndex((i) => (i === null || photos.length <= 1 ? null : Math.min(i, photos.length - 2)))
+    toast.success('Foto borrada')
+  }
+
   return (
     <div className="py-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -303,6 +357,7 @@ export default function GaleriaPage() {
             onClose={closeLightbox}
             onPrev={goPrev}
             onNext={goNext}
+            onDelete={deleteOwnPhoto}
           />
         )}
       </AnimatePresence>

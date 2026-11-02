@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Error al guardar la foto' }, { status: 500 })
     }
 
-    return NextResponse.json({ photo })
+    return NextResponse.json({ photo: { ...photo, mine: true } })
   } catch {
     return NextResponse.json({ error: 'Error del servidor' }, { status: 500 })
   }

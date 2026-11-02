@@ -111,6 +111,18 @@ export default function AdminPage() {
     setAddingChallenge(false)
   }
 
+  async function deletePhoto(photo: Photo) {
+    if (!confirm(`¿Borrar la foto de ${photo.guest_name}? No se puede deshacer.`)) return
+    const res = await fetch(`/api/admin/photos?id=${photo.id}`, { method: 'DELETE' })
+    if (res.ok) {
+      setPhotos((prev) => prev.filter((p) => p.id !== photo.id))
+      toast.success('Foto borrada')
+    } else {
+      const data = await res.json().catch(() => null)
+      toast.error(data?.error ?? 'No se pudo borrar la foto')
+    }
+  }
+
   async function deleteChallenge(id: string) {
     if (!confirm('¿Eliminar este desafío?')) return
     const res = await fetch(`/api/admin/challenges?id=${id}`, { method: 'DELETE' })
@@ -261,6 +273,13 @@ export default function AdminPage() {
                   photos.map((p) => (
                     <div key={p.id} className="relative aspect-square rounded-lg overflow-hidden bg-stone-100">
                       <Image src={p.url} alt={p.guest_name} fill className="object-cover" sizes="150px" />
+                      <button
+                        onClick={() => deletePhoto(p)}
+                        aria-label={`Borrar foto de ${p.guest_name}`}
+                        className="absolute top-1 right-1 rounded-full bg-white/90 p-1.5 text-stone-500 shadow-sm hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                       <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-1.5 py-1">
                         <p className="text-white text-[10px] truncate">{p.guest_name}</p>
                       </div>

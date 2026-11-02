@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
-import { isAuthenticated } from '@/lib/auth'
+import { getGuestSession, isAuthenticated } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   const authed = await isAuthenticated()
@@ -26,5 +26,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Error al cargar fotos' }, { status: 500 })
   }
 
-  return NextResponse.json({ photos: data })
+  // `mine` le dice a la app qué fotos puede borrar este invitado.
+  const session = await getGuestSession()
+  const photos = data.map((photo) => ({ ...photo, mine: !!session && photo.guest_id === session.guestId }))
+
+  return NextResponse.json({ photos })
 }
