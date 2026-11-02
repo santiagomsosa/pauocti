@@ -44,10 +44,12 @@ jobs:
 
       # Se trae lo que ya está en Drive para bajar de Supabase solo las fotos nuevas.
       - name: Traer el backup existente de Drive
-        run: rclone copy backup: backups/fotos --transfers 8
+        run: |
+          rclone copy backup: backups/fotos --transfers 8
 
       - name: Bajar las fotos de Supabase
         run: node scripts/backup-photos.mjs backups/fotos
 
       - name: Subir a Drive
-        run: rclone copy backups/fotos backup: --transfers 8
+        run: |
+          rclone copy backups/fotos backup: --transfers 8
