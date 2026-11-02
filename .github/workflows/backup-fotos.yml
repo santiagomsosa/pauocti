@@ -1,0 +1,53 @@
+name: Backup de fotos a Drive
+
+# Copia las fotos de la galería (archivos + tabla `photos`) a la carpeta de Drive de los novios.
+# Solo agrega: una foto borrada de la app sigue guardada en Drive.
+# Secretos: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY y RCLONE_DRIVE_TOKEN (token de rclone para Drive).
+on:
+  schedule:
+    - cron: '0 */3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: backup-fotos
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      # Remoto de rclone "backup" definido por variables: no hace falta un archivo de configuración.
+      RCLONE_CONFIG_BACKUP_TYPE: drive
+      RCLONE_CONFIG_BACKUP_SCOPE: drive
+      RCLONE_CONFIG_BACKUP_ROOT_FOLDER_ID: 1OyeVoH-oqhOAMYFY_s9B3aj3wikt1sbB
+      RCLONE_CONFIG_BACKUP_TOKEN: ${{ secrets.RCLONE_DRIVE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --ignore-scripts
+
+      - name: Instalar rclone
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq rclone
+
+      # Se trae lo que ya está en Drive para bajar de Supabase solo las fotos nuevas.
+      - name: Traer el backup existente de Drive
+        run: rclone copy backup: backups/fotos --transfers 8
+
+      - name: Bajar las fotos de Supabase
+        run: node scripts/backup-photos.mjs backups/fotos
+
+      - name: Subir a Drive
+        run: rclone copy backups/fotos backup: --transfers 8
