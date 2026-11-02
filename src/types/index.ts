@@ -98,6 +98,8 @@ export interface Photo {
   caption: string | null
   created_at: string
   challenge?: Challenge
+  /** Solo en GET /api/photos: la subió el invitado que consulta. */
+  mine?: boolean
 }
 
 export interface Message {
