@@ -21,8 +21,9 @@ export async function POST(request: NextRequest) {
     if (!file.type.startsWith('image/')) {
       return NextResponse.json({ error: 'Solo se permiten imágenes' }, { status: 400 })
     }
-    if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json({ error: 'La imagen no puede superar los 10MB' }, { status: 400 })
+    // Vercel corta antes de llegar acá cualquier request de más de 4,5 MB; el cliente ya comprime.
+    if (file.size > 4.5 * 1024 * 1024) {
+      return NextResponse.json({ error: 'La imagen es demasiado pesada' }, { status: 400 })
     }
 
     const supabase = createServerClient()

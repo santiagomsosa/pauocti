@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { Upload, X, Loader2, ImageIcon, Trophy } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { compressImage, MAX_UPLOAD_BYTES } from '@/lib/compress-image'
 import { PHOTO_CAPTION_MAX_LENGTH, type Challenge, type Photo } from '@/types'
 
 interface Props {
@@ -33,8 +34,9 @@ export function PhotoUploadModal({ open, onClose, onUploaded, challenge }: Props
       toast.error('Solo se permiten imágenes')
       return
     }
-    if (f.size > 10 * 1024 * 1024) {
-      toast.error('La imagen no puede superar los 10MB')
+    // La foto se achica antes de subirla, así que acá el tope es solo para no trabar el celular.
+    if (f.size > 50 * 1024 * 1024) {
+      toast.error('La imagen no puede superar los 50MB')
       return
     }
     setFile(f)
@@ -53,24 +55,33 @@ export function PhotoUploadModal({ open, onClose, onUploaded, challenge }: Props
     if (!file) return
     setLoading(true)
     try {
+      const upload = await compressImage(file)
+      if (upload.size > MAX_UPLOAD_BYTES) {
+        toast.error('La foto es demasiado pesada. Probá con otra o sacala de nuevo.')
+        return
+      }
+
       const formData = new FormData()
-      formData.append('file', file)
+      formData.append('file', upload)
       if (caption.trim()) formData.append('caption', caption.trim())
       if (selectedChallengeId) {
         formData.append('challengeId', selectedChallengeId)
       }
 
       const res = await fetch('/api/upload', { method: 'POST', body: formData })
-      const data = await res.json()
+      // Si el servidor corta antes (p. ej. 413 de Vercel) la respuesta no es JSON.
+      const data = await res.json().catch(() => null)
 
-      if (!res.ok) {
-        toast.error(data.error ?? 'Error al subir la foto')
+      if (!res.ok || !data?.photo) {
+        toast.error(data?.error ?? 'No se pudo subir la foto. Probá de nuevo.')
         return
       }
 
       toast.success('¡Foto subida!')
       onUploaded(data.photo)
       handleClose()
+    } catch {
+      toast.error('No se pudo subir la foto. Revisá tu conexión y probá de nuevo.')
     } finally {
       setLoading(false)
     }
@@ -109,7 +120,7 @@ export function PhotoUploadModal({ open, onClose, onUploaded, challenge }: Props
               <div className="text-center space-y-2 p-6">
                 <ImageIcon className="w-10 h-10 text-ink-300 mx-auto" />
                 <p className="text-sm text-stone-500">Tocá para elegir una foto</p>
-                <p className="text-xs text-stone-400">JPG, PNG, HEIC · Máx. 10MB</p>
+                <p className="text-xs text-stone-400">JPG, PNG, HEIC</p>
               </div>
             )}
           </div>
