@@ -78,7 +78,7 @@ export function WaitingRoom({ guestName, coupleNames, opensAt, plural }: Props) 
               Cumplir desafíos durante la noche: {v('sacá', 'saquen')} la foto, {v('subila', 'súbanla')} a la app y {v('tachalo', 'táchenlo')} de la lista.
             </Feature>
             <Feature icon="sparklers" title="Premios">
-              Los que más puntos sumen se llevan premios.
+              El que quede primero en la trivia se lleva el premio.
             </Feature>
           </div>
           <p className="text-xs leading-relaxed text-stone-400">

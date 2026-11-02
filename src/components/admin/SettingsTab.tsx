@@ -70,12 +70,16 @@ export function SettingsTab({ settings, setSettings }: SettingsTabProps) {
   }
 
   async function sendReminder() {
-    if (!confirm('¿Enviar recordatorio a todos los invitados activados?')) return
+    if (!confirm('¿Enviar el recordatorio a todos los invitados que confirmaron? Se manda un correo por persona y tarda un par de minutos.')) return
     setSendingReminder(true)
     const res = await fetch('/api/admin/reminder/send', { method: 'POST' })
     const data = await res.json()
     if (res.ok) {
-      toast.success(`Recordatorio enviado a ${data.sent} invitados`)
+      if (data.failed?.length) {
+        toast.error(`Enviado a ${data.sent}. No se pudo enviar a: ${data.failed.join(', ')}`)
+      } else {
+        toast.success(`Recordatorio enviado a ${data.sent} invitados`)
+      }
     } else {
       toast.error(data.error)
     }
@@ -215,7 +219,7 @@ export function SettingsTab({ settings, setSettings }: SettingsTabProps) {
       <div className="bg-white rounded-xl p-4 shadow-sm space-y-2">
         <h2 className="font-semibold text-stone-700">Recordatorio</h2>
         <p className="text-sm text-stone-500">
-          Envía un correo con la fecha, el lugar y el mapa a todos los invitados activados.
+          Envía a cada invitado que confirmó, en su propio mail, la fecha, el lugar, el mapa y su código de acceso.
         </p>
         <Button size="sm" variant="outline" onClick={sendReminder} disabled={sendingReminder}>
           {sendingReminder ? (
