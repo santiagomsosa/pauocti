@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
-import { WatercolorBranch, GoldDots } from '@/components/decorations'
+import { WatercolorCorner } from '@/components/decorations'
 
 export function LoginForm({
   initialCode,
@@ -49,9 +49,8 @@ export function LoginForm({
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-rose-100 via-cream-100 to-sage-50 px-4">
-      <WatercolorBranch className="absolute -top-6 -left-10 w-48 h-48 pointer-events-none" />
-      <WatercolorBranch className="absolute -bottom-10 -right-12 w-56 h-56 rotate-180 pointer-events-none" />
-      <GoldDots className="absolute top-10 right-6 w-24 h-14 pointer-events-none" />
+      <WatercolorCorner variant="hojas" className="absolute top-0 left-0 w-64 md:w-96 h-auto" />
+      <WatercolorCorner variant="flores" className="absolute bottom-0 right-0 w-60 md:w-80 h-auto rotate-180" />
 
       <div className="relative w-full max-w-sm space-y-6">
         <div className="text-center space-y-2">

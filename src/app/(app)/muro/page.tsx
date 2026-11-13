@@ -5,7 +5,6 @@ import { toast } from 'sonner'
 import { Heart, Loader2, Send } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-import { HandDrawnUnderline } from '@/components/decorations'
 import type { Message } from '@/types'
 
 function formatDate(iso: string) {
@@ -58,7 +57,6 @@ export default function MuroPage() {
     <div className="py-6 space-y-6">
       <div>
         <h1 className="font-script text-3xl text-stone-800">Muro</h1>
-        <HandDrawnUnderline className="w-14 h-3 text-sage-400 -mt-1" />
         <p className="text-sm text-stone-500 mt-1">Dejá tus buenos deseos para los novios</p>
       </div>
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Loader2 } from 'lucide-react'
-import { HandDrawnUnderline } from '@/components/decorations'
+import { BotanicalDivider } from '@/components/decorations'
 import { cn } from '@/lib/utils'
 import type { QuizRanking, QuizRankingRow } from '@/types'
 
@@ -93,7 +93,7 @@ export default function RankingPage() {
 
       <div className="pb-4">
         <h1 className="font-script text-4xl text-stone-800 leading-tight">Ranking</h1>
-        <HandDrawnUnderline className="-mt-1 h-3 w-14 text-sage-400" />
+        <BotanicalDivider className="-mt-1 h-4 w-20 text-sage-400" />
         {ranking && (
           <p className="mt-2 text-sm text-stone-500">
             {finished

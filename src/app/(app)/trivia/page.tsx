@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { motion } from 'motion/react'
 import { toast } from 'sonner'
 import { Loader2, Trophy } from 'lucide-react'
-import { HandDrawnUnderline } from '@/components/decorations'
+import { BotanicalDivider } from '@/components/decorations'
 import { CoupleReaction, preloadReactionPhotos } from '@/components/quiz/CoupleReaction'
 import { TimerBar } from '@/components/quiz/TimerBar'
 import { cn } from '@/lib/utils'
@@ -295,7 +295,7 @@ export default function TriviaPage() {
   const title = (
     <div className="pb-4">
       <h1 className="font-script text-4xl text-stone-800 leading-tight">Trivia</h1>
-      <HandDrawnUnderline className="-mt-1 h-3 w-14 text-sage-400" />
+      <BotanicalDivider className="-mt-1 h-4 w-20 text-sage-400" />
       {state.isTest && (
         <span className="mt-2 inline-block rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
           Modo ensayo

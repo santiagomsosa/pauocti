@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import { familyDisplayName, isPluralGuest } from '@/lib/guest'
+import { buildReminderEmail } from '@/lib/reminder-email'
 import type { Guest, Settings } from '@/types'
 
 const FROM = process.env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev'
@@ -85,36 +86,26 @@ export async function sendRsvpConfirmationEmail(guest: Guest, settings: Settings
   })
 }
 
-export async function sendReminderEmail(guest: Guest, settings: Settings) {
+/** URL pública de las imágenes del correo (por defecto, la carpeta /email de la app). */
+function emailAssetsUrl(): string {
+  return process.env.EMAIL_ASSETS_URL ?? `${getAppUrl()}/email`
+}
+
+/**
+ * Recordatorio individual: cuenta regresiva, lugares, qué es la app y el código de acceso de ese invitado.
+ * Devuelve true si Resend lo aceptó.
+ */
+export async function sendReminderEmail(guest: Guest, settings: Settings): Promise<boolean> {
   const resend = getResend()
-  if (!resend || !guest.email || !guest.invite_token) return
+  if (!resend || !guest.email) return false
 
-  const coupleNames = settings.couple_names ?? 'Nuestra boda'
-  const url = invitationUrl(guest.invite_token)
-  const dateLabel = settings.wedding_datetime
-    ? new Date(settings.wedding_datetime).toLocaleString('es-AR', {
-        dateStyle: 'long',
-        timeStyle: 'short',
-      })
-    : null
-
-  await resend.emails.send({
-    from: FROM,
-    to: guest.email,
-    subject: `${coupleNames} · ¡Ya falta poco!`,
-    html: wrapEmail(
-      coupleNames,
-      `
-        <p style="font-size: 15px; line-height: 1.6;">Hola ${familyDisplayName(guest)},</p>
-        <p style="font-size: 15px; line-height: 1.6;">Te recordamos los detalles de nuestra boda:</p>
-        ${dateLabel ? `<p style="font-size: 14px;"><strong>Cuándo:</strong> ${dateLabel}</p>` : ''}
-        ${settings.venue ? `<p style="font-size: 14px;"><strong>Dónde:</strong> ${settings.venue}</p>` : ''}
-        ${settings.venue_address ? `<p style="font-size: 14px; color: #78716c;">${settings.venue_address}</p>` : ''}
-        ${settings.venue_map_url ? `<div style="text-align: center; margin: 16px 0;"><a href="${settings.venue_map_url}" style="color: #5f7696; font-size: 14px;">Ver ubicación en el mapa</a></div>` : ''}
-        <div style="text-align: center; margin: 28px 0;">
-          <a href="${url}" style="background: #5f7696; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px;">Ver mi invitación</a>
-        </div>
-      `
-    ),
+  const { subject, html } = buildReminderEmail({
+    guest,
+    settings,
+    appUrl: getAppUrl(),
+    assetsUrl: emailAssetsUrl(),
   })
+
+  const { error } = await resend.emails.send({ from: FROM, to: guest.email, subject, html })
+  return !error
 }

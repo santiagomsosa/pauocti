@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Montserrat, Cinzel, Lora } from "next/font/google";
+import { Montserrat, Cinzel, Lora, Permanent_Marker } from "next/font/google";
 import localFont from "next/font/local";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -18,6 +18,13 @@ const cinzel = Cinzel({
 const lora = Lora({
   variable: "--font-lora",
   weight: ["400", "500", "600"],
+  subsets: ["latin"],
+});
+
+// Letra de birome para los textos de las polaroids de la galería.
+const permanentMarker = Permanent_Marker({
+  variable: "--font-permanent-marker",
+  weight: "400",
   subsets: ["latin"],
 });
 
@@ -40,7 +47,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${montserrat.variable} ${cinzel.variable} ${lora.variable} ${brittanySignature.variable} h-full antialiased`}
+      className={`${montserrat.variable} ${cinzel.variable} ${lora.variable} ${brittanySignature.variable} ${permanentMarker.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-cream-50">
         {children}

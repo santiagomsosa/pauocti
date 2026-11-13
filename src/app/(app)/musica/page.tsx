@@ -6,7 +6,6 @@ import { Music, Loader2, Send } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { HandDrawnUnderline } from '@/components/decorations'
 import type { MusicRequest } from '@/types'
 
 function formatDate(iso: string) {
@@ -61,7 +60,6 @@ export default function MusicaPage() {
     <div className="py-6 space-y-6">
       <div>
         <h1 className="font-script text-3xl text-stone-800">Pedidos de música</h1>
-        <HandDrawnUnderline className="w-14 h-3 text-sage-400 -mt-1" />
         <p className="text-sm text-stone-500 mt-1">Pedile una canción al DJ</p>
       </div>
 

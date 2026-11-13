@@ -1,6 +1,6 @@
 # Plan: Trivia de los novios ("¿Quién es más…? Pau vs Octi")
 
-> **Estado:** implementado y deployado en producción (`pauocti.vercel.app`, deployment `dpl_DTTEuELf97u7F9KT2TVZzuEHNNkh`) el 31/10/2026. Migración `013_quiz.sql` aplicada a mano en la base de producción (sin `db push`: la 011 no está registrada en el historial remoto). Código sin commitear en `quiz-plan-missing-pieces-0acf314e`. Pendientes: ensayo con Pau, Flor y Octi, asignar dueño a las fotos y ensayo general antes del 14/11.
+> **Estado:** implementado, mergeado con `origin/main` y deployado en producción (`pauocti.vercel.app`) el 12/11/2026. Migración `013_quiz.sql` aplicada a mano en la base de producción (sin `db push`: la 011 no está registrada en el historial remoto). Pendientes: ensayo con Pau, Flor y Octi, asignar dueño a las fotos y ensayo general antes del 14/11.
 
 ## Estado de la implementación
 

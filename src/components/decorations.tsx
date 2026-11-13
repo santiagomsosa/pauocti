@@ -1,3 +1,6 @@
+import Image from 'next/image'
+import { cn } from '@/lib/utils'
+
 function Leaf({
   transform,
   fill,
@@ -17,32 +20,32 @@ function Leaf({
   )
 }
 
-export function WatercolorBranch({ className }: { className?: string }) {
+const CORNERS = {
+  // Recortes en acuarela del encabezado de la invitación (fondo transparente).
+  hojas: { src: '/app/esquina-hojas.png', width: 440, height: 360 },
+  flores: { src: '/app/esquina-flores.png', width: 370, height: 320 },
+} as const
+
+/** Esquina en acuarela tomada del encabezado de la invitación. Se apoya en la esquina superior
+ * izquierda; rotala (rotate-180, -scale-x-100…) para usarla en las otras esquinas. */
+export function WatercolorCorner({
+  variant = 'hojas',
+  className,
+}: {
+  variant?: keyof typeof CORNERS
+  className?: string
+}) {
+  const { src, width, height } = CORNERS[variant]
   return (
-    <svg
-      viewBox="0 0 220 220"
-      fill="none"
-      className={className}
+    <Image
+      src={src}
+      alt=""
       aria-hidden="true"
-    >
-      <path
-        d="M10 8C40 30 55 55 70 90C85 125 100 150 130 175"
-        stroke="var(--color-sage-500)"
-        strokeWidth="2"
-        strokeLinecap="round"
-        opacity="0.8"
-      />
-      <Leaf transform="translate(18,22) rotate(35) scale(1.3)" fill="var(--color-sage-300)" opacity={0.85} />
-      <Leaf transform="translate(34,40) rotate(-20) scale(1.5)" fill="var(--color-sage-400)" opacity={0.85} />
-      <Leaf transform="translate(28,52) rotate(110) scale(1.1)" fill="var(--color-sage-200)" opacity={0.8} />
-      <Leaf transform="translate(55,72) rotate(40) scale(1.6)" fill="var(--color-sage-400)" opacity={0.8} />
-      <Leaf transform="translate(50,88) rotate(-60) scale(1.2)" fill="var(--color-sage-300)" opacity={0.75} />
-      <Leaf transform="translate(78,108) rotate(25) scale(1.4)" fill="var(--color-sage-400)" opacity={0.75} />
-      <Leaf transform="translate(72,124) rotate(-100) scale(1.1)" fill="var(--color-sage-200)" opacity={0.7} />
-      <Leaf transform="translate(98,142) rotate(50) scale(1.3)" fill="var(--color-sage-300)" opacity={0.65} />
-      <Leaf transform="translate(115,160) rotate(-30) scale(1.2)" fill="var(--color-sage-400)" opacity={0.6} />
-      <Leaf transform="translate(128,172) rotate(95) scale(1)" fill="var(--color-sage-200)" opacity={0.55} />
-    </svg>
+      width={width}
+      height={height}
+      sizes="(min-width: 768px) 360px, 240px"
+      className={cn('pointer-events-none select-none', className)}
+    />
   )
 }
 
@@ -66,25 +69,6 @@ export function GoldDots({ className }: { className?: string }) {
       {dots.map((d, i) => (
         <circle key={i} cx={d.x} cy={d.y} r={d.r} fill="var(--color-sand-400)" opacity={d.o} />
       ))}
-    </svg>
-  )
-}
-
-export function HandDrawnUnderline({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 100 20"
-      fill="none"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        d="M2 4C20 11 45 13 80 9"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <Leaf transform="translate(86,8) rotate(60) scale(0.45)" fill="currentColor" opacity={0.9} />
     </svg>
   )
 }
@@ -116,20 +100,6 @@ export function GiftIcon({ className }: { className?: string }) {
         <path d="M32 24C28 24 24 21 24 17C24 14 27 13 29 15C31 17 32 24 32 24Z" />
         <path d="M32 24C36 24 40 21 40 17C40 14 37 13 35 15C33 17 32 24 32 24Z" />
       </g>
-    </svg>
-  )
-}
-
-export function LeafSprig({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 48 48"
-      fill="none"
-      className={className}
-      aria-hidden="true"
-    >
-      <Leaf transform="translate(16,16) rotate(20) scale(0.8)" fill="var(--color-sage-300)" opacity={0.85} />
-      <Leaf transform="translate(28,28) rotate(-30) scale(0.7)" fill="var(--color-sage-400)" opacity={0.85} />
     </svg>
   )
 }

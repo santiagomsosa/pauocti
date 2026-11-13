@@ -85,6 +85,9 @@ export interface Challenge {
   completed_by_me?: boolean
 }
 
+/** Largo máximo del texto de una foto: tiene que entrar en el marco de la polaroid. */
+export const PHOTO_CAPTION_MAX_LENGTH = 60
+
 export interface Photo {
   id: string
   guest_id: string
@@ -92,8 +95,12 @@ export interface Photo {
   url: string
   storage_path: string
   challenge_id: string | null
+  /** Texto que escribe el invitado al subir la foto. */
+  caption: string | null
   created_at: string
   challenge?: Challenge
+  /** Solo en GET /api/photos: la subió el invitado que consulta. */
+  mine?: boolean
 }
 
 export interface Message {

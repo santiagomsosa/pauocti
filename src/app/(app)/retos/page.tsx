@@ -7,7 +7,6 @@ import { Trophy, Camera, ChevronDown, ChevronUp, Search, X, CheckCircle2 } from 
 import { PhotoUploadModal } from '@/components/PhotoUploadModal'
 import { ChallengesProgress } from '@/components/ChallengesProgress'
 import { Badge } from '@/components/ui/badge'
-import { HandDrawnUnderline } from '@/components/decorations'
 import type { Challenge, Photo } from '@/types'
 
 function ChallengeCard({
@@ -151,7 +150,6 @@ export default function RetosPage() {
     <div className="py-6 space-y-4">
       <div>
         <h1 className="font-script text-3xl text-stone-800">Desafíos</h1>
-        <HandDrawnUnderline className="w-14 h-3 text-sage-400 -mt-1" />
         <p className="text-sm text-stone-500 mt-1">Completá los desafíos fotográficos</p>
       </div>
 

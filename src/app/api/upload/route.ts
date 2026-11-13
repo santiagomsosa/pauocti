@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { getGuestSession } from '@/lib/auth'
+import { PHOTO_CAPTION_MAX_LENGTH } from '@/types'
 
 export async function POST(request: NextRequest) {
   const session = await getGuestSession()
@@ -12,6 +13,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const file = formData.get('file') as File | null
     const challengeId = formData.get('challengeId') as string | null
+    const caption = String(formData.get('caption') ?? '').trim().slice(0, PHOTO_CAPTION_MAX_LENGTH) || null
 
     if (!file) {
       return NextResponse.json({ error: 'No se proporcionó un archivo' }, { status: 400 })
@@ -19,8 +21,9 @@ export async function POST(request: NextRequest) {
     if (!file.type.startsWith('image/')) {
       return NextResponse.json({ error: 'Solo se permiten imágenes' }, { status: 400 })
     }
-    if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json({ error: 'La imagen no puede superar los 10MB' }, { status: 400 })
+    // Vercel corta antes de llegar acá cualquier request de más de 4,5 MB; el cliente ya comprime.
+    if (file.size > 4.5 * 1024 * 1024) {
+      return NextResponse.json({ error: 'La imagen es demasiado pesada' }, { status: 400 })
     }
 
     const supabase = createServerClient()
@@ -49,6 +52,7 @@ export async function POST(request: NextRequest) {
         url: publicUrl,
         storage_path: storagePath,
         challenge_id: challengeId || null,
+        caption,
       })
       .select()
       .single()
@@ -57,7 +61,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Error al guardar la foto' }, { status: 500 })
     }
 
-    return NextResponse.json({ photo })
+    return NextResponse.json({ photo: { ...photo, mine: true } })
   } catch {
     return NextResponse.json({ error: 'Error del servidor' }, { status: 500 })
   }
