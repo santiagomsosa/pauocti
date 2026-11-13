@@ -41,6 +41,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from('guests')
     .select('*')
+    .eq('is_test', false)
     .order('name', { ascending: true })
 
   if (error) {

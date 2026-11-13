@@ -6,6 +6,7 @@ import { Camera, ChevronRight, Images, Music } from 'lucide-react'
 import { PhotoUploadModal } from '@/components/PhotoUploadModal'
 import { ChallengesProgress } from '@/components/ChallengesProgress'
 import { HandDrawnUnderline } from '@/components/decorations'
+import { QuizHomeCard } from '@/components/QuizHomeCard'
 import type { Challenge, Message } from '@/types'
 
 function HomeChallengeCard({
@@ -59,6 +60,8 @@ export function HomeContent({ guestName, challenges, completedCount, messages, p
         <h1 className="font-script text-4xl text-stone-800 leading-tight">{firstName}</h1>
         <HandDrawnUnderline className="w-14 h-3 text-sage-400 -mt-1" />
       </div>
+
+      <QuizHomeCard />
 
       {/* Desafíos */}
       <section className="space-y-3">

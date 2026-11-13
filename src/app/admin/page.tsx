@@ -11,10 +11,11 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
-import { Trash2, Plus, LogOut, Loader2, Users, Trophy, Images, Heart, Music, Settings as SettingsIcon, LayoutGrid } from 'lucide-react'
+import { Trash2, Plus, LogOut, Loader2, Users, Trophy, Images, Heart, Music, Settings as SettingsIcon, LayoutGrid, Brain } from 'lucide-react'
 import { GuestsTab } from '@/components/admin/GuestsTab'
 import { SettingsTab } from '@/components/admin/SettingsTab'
 import { TablesTab } from '@/components/admin/TablesTab'
+import { QuizTab } from '@/components/admin/QuizTab'
 import type { Guest, Challenge, Photo, Message, MusicRequest, Settings, WeddingTable } from '@/types'
 
 const EMPTY_SETTINGS: Settings = {
@@ -139,7 +140,7 @@ export default function AdminPage() {
           </div>
         ) : (
           <Tabs defaultValue="guests">
-            <TabsList className="grid grid-cols-7 mb-6 w-full">
+            <TabsList className="grid grid-cols-8 mb-6 w-full">
               <TabsTrigger value="guests" className="gap-1">
                 <Users className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Invitados</span>
@@ -169,6 +170,10 @@ export default function AdminPage() {
                 <span className="hidden sm:inline">Música</span>
                 <Badge className="text-[10px] px-1 py-0 h-4 ml-1">{musicRequests.length}</Badge>
               </TabsTrigger>
+              <TabsTrigger value="quiz" className="gap-1">
+                <Brain className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Trivia</span>
+              </TabsTrigger>
               <TabsTrigger value="settings" className="gap-1">
                 <SettingsIcon className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Config</span>
@@ -183,6 +188,11 @@ export default function AdminPage() {
             {/* Mesas */}
             <TabsContent value="tables">
               <TablesTab tables={tables} setTables={setTables} guests={guests} setGuests={setGuests} />
+            </TabsContent>
+
+            {/* Trivia */}
+            <TabsContent value="quiz">
+              <QuizTab />
             </TabsContent>
 
             {/* Configuración */}

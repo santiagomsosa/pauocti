@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ADMIN_COOKIE } from '@/lib/auth'
+import { encodeAdminToken } from '@/lib/session-token'
 import { z } from 'zod'
+
+const ADMIN_SESSION_SECONDS = 60 * 60 * 8
 
 const schema = z.object({ password: z.string().min(1) })
 
@@ -14,11 +17,11 @@ export async function POST(request: NextRequest) {
     }
 
     const response = NextResponse.json({ success: true })
-    response.cookies.set(ADMIN_COOKIE, 'authenticated', {
+    response.cookies.set(ADMIN_COOKIE, encodeAdminToken(ADMIN_SESSION_SECONDS), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 8,
+      maxAge: ADMIN_SESSION_SECONDS,
       path: '/',
     })
     return response

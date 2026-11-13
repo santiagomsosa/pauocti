@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation'
-import { cookies, headers } from 'next/headers'
+import { headers } from 'next/headers'
 import { createServerClient } from '@/lib/supabase/server'
 import { getSettings } from '@/lib/settings'
-import { ADMIN_COOKIE } from '@/lib/auth'
+import { getAdminSession } from '@/lib/auth'
 import { InvitationView } from '@/components/invitation/InvitationView'
 import type { Guest, GuestOpen } from '@/types'
 
@@ -38,14 +38,13 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
   // No contamos como "apertura" cuando el admin abre el link para previsualizarlo,
   // ni cuando el request viene de un bot de preview de links, ni si ya se registró
   // una apertura hace muy poco tiempo.
-  const cookieStore = await cookies()
   const headerStore = await headers()
   const userAgent = headerStore.get('user-agent') ?? ''
   const isPreviewBot = LINK_PREVIEW_BOT_PATTERN.test(userAgent)
 
   const opens: GuestOpen[] = Array.isArray(guest.opens) ? guest.opens : []
 
-  if (!cookieStore.get(ADMIN_COOKIE) && !isPreviewBot && !wasOpenedRecently(opens)) {
+  if (!(await getAdminSession()) && !isPreviewBot && !wasOpenedRecently(opens)) {
     try {
       await supabase
         .from('guests')

@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, Images, Heart, Trophy, Music, LogOut } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Home, Images, Heart, Trophy, Music, LogOut, Brain } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { LeafSprig } from '@/components/decorations'
@@ -23,6 +24,7 @@ const tabs = [
   { href: '/inicio', label: 'Inicio', icon: Home },
   { href: '/galeria', label: 'Galería', icon: Images },
   { href: '/muro', label: 'Muro', icon: Heart },
+  { href: '/trivia', label: 'Trivia', icon: Brain },
   { href: '/retos', label: 'Desafíos', icon: Trophy },
   { href: '/musica', label: 'Música', icon: Music },
 ]
@@ -31,9 +33,77 @@ interface NavbarProps {
   guestName: string
 }
 
+const QUIZ_POLL_MS = 60_000
+const QUIZ_CHANGED_EVENT = 'quiz:changed'
+
+/**
+ * Consulta el estado liviano de la trivia cada minuto, al volver a la pestaña y al navegar.
+ * Devuelve cuántas preguntas liberadas quedan sin responder (punto rojo) y avisa con un
+ * toast la primera vez que se detecta una tanda nueva.
+ */
+function useQuizPending(guestName: string): number {
+  const pathname = usePathname()
+  const router = useRouter()
+  const [pending, setPending] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
+    const storageKey = `quiz_seen_round:${guestName}`
+
+    function announce(releasedRounds: number, pendingCount: number) {
+      let seen = 0
+      try {
+        seen = Number(localStorage.getItem(storageKey) ?? 0)
+      } catch {}
+      if (releasedRounds <= seen) return
+      try {
+        localStorage.setItem(storageKey, String(releasedRounds))
+      } catch {}
+      if (pendingCount > 0 && !window.location.pathname.startsWith('/trivia')) {
+        toast('¡Salió una nueva tanda de la trivia! 🎉', {
+          action: { label: 'Jugar', onClick: () => router.push('/trivia') },
+        })
+      }
+    }
+
+    async function check() {
+      try {
+        const res = await fetch('/api/quiz/status', { cache: 'no-store' })
+        if (!res.ok || cancelled) return
+        const data: { status: string; releasedRounds: number; pendingCount: number } = await res.json()
+        if (cancelled) return
+        const open = data.status === 'open'
+        setPending(open ? data.pendingCount : 0)
+        if (open) announce(data.releasedRounds, data.pendingCount)
+      } catch {
+        // sin conexión: se reintenta en el próximo ciclo
+      }
+    }
+
+    function onVisible() {
+      if (document.visibilityState === 'visible') check()
+    }
+
+    check()
+    const timer = setInterval(check, QUIZ_POLL_MS)
+    document.addEventListener('visibilitychange', onVisible)
+    // La pantalla de Trivia avisa cuando el invitado responde, para actualizar el punto rojo al instante
+    window.addEventListener(QUIZ_CHANGED_EVENT, check)
+    return () => {
+      cancelled = true
+      clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener(QUIZ_CHANGED_EVENT, check)
+    }
+  }, [pathname, guestName, router])
+
+  return pending
+}
+
 export function Navbar({ guestName }: NavbarProps) {
   const pathname = usePathname()
   const router = useRouter()
+  const quizPending = useQuizPending(guestName)
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' })
@@ -74,7 +144,15 @@ export function Navbar({ guestName }: NavbarProps) {
                 active ? 'text-ink-500' : 'text-stone-400 hover:text-stone-600'
               )}
             >
-              <Icon className={cn('w-5 h-5', active && 'fill-ink-100')} />
+              <span className="relative">
+                <Icon className={cn('w-5 h-5', active && 'fill-ink-100')} />
+                {href === '/trivia' && quizPending > 0 && (
+                  <span
+                    className="absolute -top-0.5 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"
+                    aria-label="Hay preguntas nuevas"
+                  />
+                )}
+              </span>
               <span className="text-[10px] font-medium">{label}</span>
             </Link>
           )

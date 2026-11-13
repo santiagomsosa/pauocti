@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { decodeGuestToken, isValidAdminToken } from '@/lib/session-token'
 
 const ADMIN_LOGIN = '/admin/login'
 
@@ -11,10 +12,12 @@ export function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Las cookies van firmadas: no alcanza con que existan, tienen que ser válidas.
+  const isAdmin = isValidAdminToken(request.cookies.get('admin_session')?.value)
+
   // Admin routes (excepto /admin/login y /api/admin/login)
   if (pathname.startsWith('/admin') && pathname !== ADMIN_LOGIN) {
-    const adminSession = request.cookies.get('admin_session')
-    if (!adminSession) {
+    if (!isAdmin) {
       return NextResponse.redirect(new URL(ADMIN_LOGIN, request.url))
     }
     return NextResponse.next()
@@ -26,8 +29,7 @@ export function proxy(request: NextRequest) {
     pathname !== '/api/admin/login' &&
     pathname !== '/api/admin/logout'
   ) {
-    const adminSession = request.cookies.get('admin_session')
-    if (!adminSession) {
+    if (!isAdmin) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
     return NextResponse.next()
@@ -40,9 +42,8 @@ export function proxy(request: NextRequest) {
   }
 
   // Rutas protegidas de invitados (también acepta sesión de admin)
-  const guestSession = request.cookies.get('guest_session')
-  const adminSession = request.cookies.get('admin_session')
-  if (!guestSession && !adminSession) {
+  const isGuest = decodeGuestToken(request.cookies.get('guest_session')?.value) !== null
+  if (!isGuest && !isAdmin) {
     // API routes → 401, páginas → redirect al login
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })

@@ -1,26 +1,16 @@
-import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Navbar } from '@/components/Navbar'
 import { WaitingRoom } from '@/components/WaitingRoom'
 import { WatercolorBranch, GoldDots } from '@/components/decorations'
+import { getGuestSession } from '@/lib/auth'
 import { canAccessApp, getAppOpensAt } from '@/lib/app-access'
 import { isPluralGuest } from '@/lib/guest'
 import { getSettings } from '@/lib/settings'
 import { createServerClient } from '@/lib/supabase/server'
-import type { Guest, GuestSession } from '@/types'
+import type { Guest } from '@/types'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies()
-  const raw = cookieStore.get('guest_session')?.value
-
-  let session: GuestSession | null = null
-  if (raw) {
-    try {
-      session = JSON.parse(Buffer.from(raw, 'base64').toString('utf-8'))
-    } catch {
-      session = null
-    }
-  }
+  const session = await getGuestSession()
 
   if (!session) {
     redirect('/')

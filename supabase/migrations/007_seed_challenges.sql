@@ -1,4 +1,5 @@
--- Seed de desafíos fotográficos (ON CONFLICT evita duplicados si se corre más de una vez)
+-- Seed de desafíos fotográficos. La restricción única sobre title recién llega con la migración 009,
+-- que además elimina los duplicados; por eso acá el ON CONFLICT no lleva columna.
 insert into public.challenges (title, description, emoji) values
   ('Sacate una foto con un pelado', 'Dicen que los pelados traen suerte. ¿Será verdad?', '🧢'),
   ('Sacate una foto con un jugador del B.U.F.C.', 'Encontrá a uno de los cracks del equipo.', '⚽'),
@@ -21,4 +22,4 @@ insert into public.challenges (title, description, emoji) values
   ('Sacate una foto imitando la pose de los novios en la torta', 'A ver quién la clava mejor.', '🎂'),
   ('Sacate una foto con el ramo de la novia', 'Antes o después de que lo tiren, ¡vale igual!', '💐'),
   ('Sacate una selfie con la mayor cantidad de gente posible en un solo cuadro', 'Cuantos más, mejor la foto grupal.', '🤳')
-on conflict (title) do nothing;
+on conflict do nothing;

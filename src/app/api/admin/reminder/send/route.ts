@@ -10,6 +10,7 @@ export async function POST() {
     .from('guests')
     .select('*')
     .eq('is_active', true)
+    .eq('is_test', false)
     .not('email', 'is', null)
 
   if (error) {

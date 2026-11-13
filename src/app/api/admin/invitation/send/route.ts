@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createServerClient()
-    let query = supabase.from('guests').select('*').is('parent_guest_id', null).not('email', 'is', null)
+    let query = supabase.from('guests').select('*').eq('is_test', false).is('parent_guest_id', null).not('email', 'is', null)
     if (id) query = query.eq('id', id)
 
     const { data, error } = await query
