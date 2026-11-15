@@ -18,6 +18,8 @@ export interface AlbumChallenge {
 
 export interface AlbumPhoto {
   id: string
+  /** Huella del archivo (eTag de Storage): dos filas con la misma huella son la misma foto subida dos veces. */
+  contentKey: string
   url: string
   guestId: string
   guestName: string
@@ -69,6 +71,24 @@ export function challengeRanking(photos: AlbumPhoto[]): RankingRow[] {
     completed: row.completed,
     reachedAt: new Date(row.reachedAtMs).toISOString(),
   }))
+}
+
+/**
+ * Saca las fotos repetidas (mismo archivo subido más de una vez): queda una por huella,
+ * la que tiene comentario si alguna lo tiene y si no la primera. Mantiene el orden de entrada.
+ */
+export function dedupePhotos(photos: AlbumPhoto[]): AlbumPhoto[] {
+  const best = new Map<string, AlbumPhoto>()
+  for (const photo of photos) {
+    const current = best.get(photo.contentKey)
+    const better =
+      !current ||
+      (!current.caption && !!photo.caption) ||
+      (!current.caption === !photo.caption && new Date(photo.createdAt).getTime() < new Date(current.createdAt).getTime())
+    if (better) best.set(photo.contentKey, photo)
+  }
+  const keep = new Set([...best.values()].map((p) => p.id))
+  return photos.filter((p) => keep.has(p.id))
 }
 
 const hourFormat = new Intl.DateTimeFormat('es-AR', {
@@ -191,7 +211,8 @@ export function buildAlbum(photos: AlbumPhoto[], challenges: AlbumChallenge[]): 
   const pages: AlbumPage[] = [{ kind: 'title' }, { kind: 'index' }]
   const sections: AlbumSection[] = [{ id: 'inicio', emoji: '📖', title: 'Portada', page: 0, entries: [] }]
 
-  const groups = groupByHour(photos)
+  // Cada foto se ve una sola vez; el ranking (más abajo) sí cuenta todas las filas.
+  const groups = groupByHour(dedupePhotos(photos))
   const night = groups.flatMap((g) => g.photos)
   if (night.length > 0) {
     const section: AlbumSection = { id: 'noche', emoji: '🌙', title: 'La noche', page: pages.length, entries: [] }
@@ -223,13 +244,15 @@ export function buildAlbum(photos: AlbumPhoto[], challenges: AlbumChallenge[]): 
     sections.push(section)
   }
 
+  // Dentro de cada reto tampoco se repite, pero una foto usada para dos retos aparece en los dos.
   const byChallenge = new Map<string, AlbumPhoto[]>()
-  for (const photo of night) {
+  for (const photo of groupByHour(photos).flatMap((g) => g.photos)) {
     if (!photo.challenge) continue
     const list = byChallenge.get(photo.challenge.id) ?? []
     list.push(photo)
     byChallenge.set(photo.challenge.id, list)
   }
+  for (const [id, list] of byChallenge) byChallenge.set(id, dedupePhotos(list))
   const withPhotos = challenges.filter((c) => byChallenge.has(c.id))
   if (withPhotos.length > 0) {
     const section: AlbumSection = { id: 'retos', emoji: '📸', title: 'Los retos', page: pages.length, entries: [] }

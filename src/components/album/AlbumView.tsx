@@ -80,7 +80,7 @@ export function AlbumView({
     coupleNames,
     date,
     stats: {
-      photos: photos.length,
+      photos: album.night.length,
       photographers: guests.length,
       challengesDone: album.ranking.reduce((n, r) => n + r.completed, 0),
     },

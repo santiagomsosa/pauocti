@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { buildAlbum, challengeRanking, downloadUrl, formatTime, groupByHour } from './album.ts'
+import { buildAlbum, challengeRanking, dedupePhotos, downloadUrl, formatTime, groupByHour } from './album.ts'
 import type { AlbumPage, AlbumPhoto } from './album.ts'
 
 const RETO_A = { id: 'a', title: 'Selfie con los novios', emoji: '🤳' }
@@ -11,6 +11,7 @@ let seq = 0
 function photo(guestId: string, utc: string, extra: Partial<AlbumPhoto> = {}): AlbumPhoto {
   return {
     id: `p${++seq}`,
+    contentKey: `k${seq}`,
     url: `https://x.supabase.co/storage/v1/object/public/wedding-photos/${seq}.jpg`,
     guestId,
     guestName: guestId.toUpperCase(),
@@ -123,4 +124,26 @@ test('buildAlbum: sin retos cumplidos no hay ranking ni sección de retos', () =
     album.sections.map((s) => s.id),
     ['inicio', 'noche', 'cierre']
   )
+})
+
+test('dedupePhotos: deja una por archivo, prefiriendo la que tiene comentario', () => {
+  const a1 = photo('ana', '01:00', { contentKey: 'x' })
+  const a2 = photo('ana', '01:01', { contentKey: 'x', caption: 'Viva Pau y Octi' })
+  const b1 = photo('ana', '01:02', { contentKey: 'y' })
+  const b2 = photo('ana', '01:03', { contentKey: 'y' })
+  assert.deepEqual(
+    dedupePhotos([a1, a2, b1, b2]).map((p) => p.id),
+    [a2.id, b1.id]
+  )
+})
+
+test('buildAlbum: la foto repetida se ve una vez, pero en cada reto donde se usó y sin quitarle puntos', () => {
+  const p1 = photo('ana', '01:00', { contentKey: 'x', challenge: RETO_A })
+  const p2 = photo('ana', '01:01', { contentKey: 'x', challenge: RETO_B })
+  const p3 = photo('ana', '01:02', { contentKey: 'x', challenge: RETO_B })
+  const album = buildAlbum([p1, p2, p3], [RETO_A, RETO_B])
+  assert.equal(album.night.length, 1)
+  assert.equal(album.byChallenge.get('a')!.length, 1)
+  assert.equal(album.byChallenge.get('b')!.length, 1)
+  assert.equal(album.ranking[0].completed, 2)
 })
