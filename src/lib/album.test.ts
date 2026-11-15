@@ -106,9 +106,7 @@ test('buildAlbum: secciones en orden, 4 fotos por hoja y el índice apunta a la 
   const hoja23 = album.pages[3] as Extract<AlbumPage, { kind: 'photos' }>
   const sigue23 = album.pages[4] as Extract<AlbumPage, { kind: 'photos' }>
   assert.equal(hoja23.photos.length, 4)
-  assert.equal(hoja23.continued, false)
   assert.equal(sigue23.photos.length, 1)
-  assert.equal(sigue23.continued, true)
   assert.equal(sigue23.dayLabel, null)
   // El reto C no tiene fotos: no aparece.
   assert.deepEqual(

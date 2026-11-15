@@ -170,8 +170,6 @@ export type AlbumPage =
       heading: string
       /** Solo en la primera hoja de cada día de "La noche". */
       dayLabel: string | null
-      /** La hoja sigue el tema de la anterior (misma hora o mismo reto). */
-      continued: boolean
       photos: AlbumPhoto[]
     }
   | { kind: 'podium'; rows: RankingRow[]; total: number }
@@ -228,7 +226,6 @@ export function buildAlbum(photos: AlbumPhoto[], challenges: AlbumChallenge[]): 
           list: 'noche',
           heading: group.label,
           dayLabel: i === 0 ? group.dayLabel : null,
-          continued: i > 0,
           photos: list,
         })
       )
@@ -259,13 +256,12 @@ export function buildAlbum(photos: AlbumPhoto[], challenges: AlbumChallenge[]): 
     pages.push({ kind: 'divider', emoji: '📸', title: 'Los retos', subtitle: `${withPhotos.length} retos cumplidos en fotos` })
     for (const challenge of withPhotos) {
       section.entries.push({ label: `${challenge.emoji} ${challenge.title}`, page: pages.length })
-      chunk(byChallenge.get(challenge.id)!, PHOTOS_PER_PAGE).forEach((list, i) =>
+      chunk(byChallenge.get(challenge.id)!, PHOTOS_PER_PAGE).forEach((list) =>
         pages.push({
           kind: 'photos',
           list: { challengeId: challenge.id },
           heading: `${challenge.emoji} ${challenge.title}`,
           dayLabel: null,
-          continued: i > 0,
           photos: list,
         })
       )

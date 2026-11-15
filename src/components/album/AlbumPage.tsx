@@ -37,13 +37,11 @@ function PhotosPage({ page, number, ctx }: { page: Extract<Page, { kind: 'photos
           {page.list === 'noche' ? (
             <h2 className="truncate font-script text-[8cqw] leading-tight text-stone-800">
               {page.heading}
-              {page.continued && <span className="ml-[2cqw] font-sans text-[2.8cqw] text-stone-400">(sigue)</span>}
             </h2>
           ) : (
             // Los títulos de los retos son frases largas: van en letra a mano, en hasta dos líneas.
             <h2 className="line-clamp-2 pt-[1cqh] font-pen text-[3.8cqw] leading-snug text-stone-800">
               {page.heading}
-              {page.continued && <span className="ml-[2cqw] font-sans text-[2.8cqw] text-stone-400">(sigue)</span>}
             </h2>
           )}
         </header>
