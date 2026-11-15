@@ -1,9 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Probar desde el celu en la red de casa con `next dev`: la IP de la Mac cambia (antes .11, ahora .13).
-  // Sin esto el dev server le niega el JavaScript al celu y la página no responde a los toques.
-  allowedDevOrigins: ["192.168.1.*"],
+  // Probar desde el celu con `next dev`: por la red de casa (la IP de la Mac cambia) o por Tailscale
+  // (IP 100.x o el nombre *.ts.net). Sin esto el dev server le niega el JavaScript al celu y la página
+  // se ve pero no responde a los toques. Solo aplica en desarrollo.
+  allowedDevOrigins: ["192.168.1.*", "100.*.*.*", "**.ts.net"],
   images: {
     remotePatterns: [
       {
