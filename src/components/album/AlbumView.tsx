@@ -107,18 +107,22 @@ export function AlbumView({
             key="cover"
             exit={{ opacity: 0 }}
             transition={{ duration: 0.6 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center overflow-hidden bg-stone-900"
+            // Toda la tapa abre el álbum: en Safari del iPhone la barra de direcciones flota sobre la parte
+            // de abajo de la pantalla y se queda con los toques de esa zona.
+            onClick={open}
+            className="fixed inset-0 z-[60] flex cursor-pointer touch-manipulation items-center justify-center overflow-hidden bg-stone-900"
           >
             {/* Fondo desenfocado: en pantallas anchas la foto vertical queda centrada sin barras negras. */}
             <Image src={ALBUM_COVER_SRC} alt="" fill priority className="scale-110 object-cover opacity-60 blur-2xl" sizes="100vw" aria-hidden />
             <div className="relative h-full w-full max-w-[560px]">
               <Image src={ALBUM_COVER_SRC} alt={`${coupleNames} caminando de la mano`} fill priority className="object-cover object-top" sizes="(max-width: 560px) 100vw, 560px" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/20" />
-              <div className="absolute inset-x-0 bottom-0 flex flex-col items-center px-4 pb-12 text-center text-white">
+              {/* svh: la altura que queda visible con las barras del navegador abiertas; el botón queda arriba de ellas. */}
+              <div className="absolute inset-x-0 top-0 flex h-[100svh] flex-col items-center justify-end px-4 pb-24 text-center text-white">
                 <p className="font-script text-5xl leading-none drop-shadow sm:text-6xl">{coupleNames}</p>
                 {date && <p className="mt-3 font-title text-sm tracking-[0.2em] text-white/90">{date.toUpperCase()}</p>}
                 <button
-                  onClick={open}
+                  type="button"
                   className="mt-7 rounded-full bg-white px-7 py-3 text-sm font-semibold text-stone-800 shadow-lg transition-transform active:scale-95"
                 >
                   Abrir el álbum
