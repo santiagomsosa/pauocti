@@ -1,4 +1,5 @@
 import { createServerClient } from '@/lib/supabase/server'
+import { displayPhotoUrl } from '@/lib/photos'
 import type { AlbumChallenge, AlbumPhoto } from '@/lib/album'
 
 export interface AlbumData {
@@ -34,7 +35,7 @@ export async function getAlbumData(): Promise<AlbumData> {
     .filter((row) => !row.guest?.is_test)
     .map((row) => ({
       id: row.id,
-      url: row.url,
+      url: displayPhotoUrl(row.url),
       guestId: row.guest_id,
       // El nombre de la lista de invitados; si no está, el que quedó guardado en la foto.
       guestName: row.guest?.name ?? row.guest_name,

@@ -37,6 +37,8 @@ export function Polaroid({
   index,
   onClick,
   ariaLabel,
+  sizes = '(max-width: 640px) 33vw, 160px',
+  className,
 }: {
   url: string
   caption: string | null
@@ -44,12 +46,19 @@ export function Polaroid({
   index: number
   onClick: () => void
   ariaLabel: string
+  /** `sizes` de la imagen: cuánto ocupa en pantalla, para no bajar más resolución de la necesaria. */
+  sizes?: string
+  className?: string
 }) {
   return (
     <button
       onClick={onClick}
       aria-label={ariaLabel}
-      className="relative bg-white p-1.5 rounded-[2px] shadow-[0_2px_8px_rgba(60,45,30,0.15)] transition-transform duration-200 hover:!rotate-0 hover:scale-[1.03] active:scale-95"
+      // w-full: sin esto, una polaroid sin texto queda sin ancho (la foto no le da tamaño) y se ve como una tira.
+      className={cn(
+        'relative block w-full bg-white p-1.5 rounded-[2px] shadow-[0_2px_8px_rgba(60,45,30,0.15)] transition-transform duration-200 hover:!rotate-0 hover:scale-[1.03] active:scale-95',
+        className
+      )}
       style={{ rotate: `${POLAROID_TILTS[index % POLAROID_TILTS.length]}deg` }}
     >
       <Tape rotate={TAPE_TILTS[index % TAPE_TILTS.length]} />
@@ -59,7 +68,7 @@ export function Polaroid({
           alt={caption ?? 'Foto de la galería'}
           fill
           className="object-cover"
-          sizes="(max-width: 640px) 33vw, 160px"
+          sizes={sizes}
         />
         {challenge && (
           <span
