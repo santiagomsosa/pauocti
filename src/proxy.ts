@@ -12,6 +12,11 @@ export function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Álbum del casamiento: público y de solo lectura (link sin login; incluye la tapa y la canción).
+  if (pathname === '/album' || pathname.startsWith('/album/')) {
+    return NextResponse.next()
+  }
+
   // Las cookies van firmadas: no alcanza con que existan, tienen que ser válidas.
   const isAdmin = isValidAdminToken(request.cookies.get('admin_session')?.value)
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { getGuestSession, isAuthenticated } from '@/lib/auth'
+import { displayPhotoUrl } from '@/lib/photos'
 
 export async function GET(request: NextRequest) {
   const authed = await isAuthenticated()
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
 
   // `mine` le dice a la app qué fotos puede borrar este invitado.
   const session = await getGuestSession()
-  const photos = data.map((photo) => ({ ...photo, mine: !!session && photo.guest_id === session.guestId }))
+  const photos = data.map((photo) => ({ ...photo, url: displayPhotoUrl(photo.url), mine: !!session && photo.guest_id === session.guestId }))
 
   return NextResponse.json({ photos })
 }
