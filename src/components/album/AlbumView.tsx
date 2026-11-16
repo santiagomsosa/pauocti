@@ -204,8 +204,10 @@ export function AlbumView({
                               {e.label}
                             </button>
                           ) : (
-                            <button key={e.page} onClick={() => jump(e.page)} className="block w-full truncate text-left text-sm text-stone-600 hover:text-ink-600">
-                              {e.label}
+                            <button key={e.page} onClick={() => jump(e.page)} className="flex w-full gap-2 py-0.5 text-left text-sm leading-snug text-stone-600 hover:text-ink-600">
+                              {/* El emoji va aparte: si el título ocupa dos líneas, la segunda queda alineada con el texto. */}
+                              <span className="shrink-0">{e.label.split(' ')[0]}</span>
+                              <span className="line-clamp-2">{e.label.slice(e.label.indexOf(' ') + 1)}</span>
                             </button>
                           )
                         )}

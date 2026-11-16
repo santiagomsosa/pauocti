@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { buildAlbum, challengeRanking, dedupePhotos, downloadUrl, formatTime, groupByHour } from './album.ts'
+import { buildAlbum, challengeRanking, dedupePhotos, downloadUrl, formatTime, groupByHour, shortChallengeTitle } from './album.ts'
 import type { AlbumPage, AlbumPhoto } from './album.ts'
 
 const RETO_A = { id: 'a', title: 'Selfie con los novios', emoji: '🤳' }
@@ -172,4 +172,11 @@ test('ranking: si la foto repetida se puede asignar a otro reto, se cuenta (no s
   assert.equal(rows[0].completed, 2)
   // Llega a 2 recién con la foto Y (01:30).
   assert.equal(rows[0].reachedAt, '2026-11-15T01:30:00.000Z')
+})
+
+test('shortChallengeTitle saca el "Sacate una foto/selfie (con)" del comienzo', () => {
+  assert.equal(shortChallengeTitle('Sacate una foto con un pelado'), 'Un pelado')
+  assert.equal(shortChallengeTitle('Sacate una foto brindando con alguien que acabás de conocer'), 'Brindando con alguien que acabás de conocer')
+  assert.equal(shortChallengeTitle('Sacate una selfie con la mayor cantidad de gente posible en un solo cuadro'), 'La mayor cantidad de gente posible en un solo cuadro')
+  assert.equal(shortChallengeTitle('Bailá con los novios'), 'Bailá con los novios')
 })

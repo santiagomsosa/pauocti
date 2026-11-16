@@ -8,7 +8,7 @@ export const ALBUM_COVER_SRC = '/album/tapa.jpg'
 export const ALBUM_CLOSING_SRC = '/album/cierre.jpg'
 
 /** Canción que arranca al tocar "Abrir el álbum" (en /public). `null` oculta la música. */
-export const ALBUM_SONG_SRC: string | null = '/album/cancion.m4a' // "Bancate ese defecto", Charly García
+export const ALBUM_SONG_SRC: string | null = '/album/bancate-ese-defecto.m4a' // Charly García, hasta el 1:28 ("bancate ese defecto") y en loop
 
 export interface AlbumChallenge {
   id: string
@@ -230,6 +230,12 @@ export interface Album {
   byChallenge: Map<string, AlbumPhoto[]>
 }
 
+/** Título corto para el menú: "Sacate una foto con un pelado" → "Un pelado". */
+export function shortChallengeTitle(title: string): string {
+  const rest = title.replace(/^sacate una (foto|selfie)\s+(con\s+)?/i, '').trim()
+  return rest ? rest[0].toLocaleUpperCase('es') + rest.slice(1) : title
+}
+
 function chunk<T>(items: T[], size: number): T[][] {
   const out: T[][] = []
   for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size))
@@ -290,7 +296,7 @@ export function buildAlbum(photos: AlbumPhoto[], challenges: AlbumChallenge[]): 
     const section: AlbumSection = { id: 'retos', emoji: '📸', title: 'Los retos', page: pages.length, entries: [] }
     pages.push({ kind: 'divider', emoji: '📸', title: 'Los retos', subtitle: `${withPhotos.length} retos cumplidos en fotos` })
     for (const challenge of withPhotos) {
-      section.entries.push({ label: `${challenge.emoji} ${challenge.title}`, page: pages.length })
+      section.entries.push({ label: `${challenge.emoji} ${shortChallengeTitle(challenge.title)}`, page: pages.length })
       chunk(byChallenge.get(challenge.id)!, PHOTOS_PER_PAGE).forEach((list) =>
         pages.push({
           kind: 'photos',
