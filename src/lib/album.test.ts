@@ -95,7 +95,7 @@ test('buildAlbum: secciones en orden, 4 fotos por hoja y el índice apunta a la 
   const album = buildAlbum(photos, [RETO_A, RETO_B, RETO_C])
   assert.deepEqual(
     album.pages.map((p) => p.kind),
-    ['title', 'index', 'divider', 'photos', 'photos', 'photos', 'podium', 'ranking', 'divider', 'photos', 'photos', 'closing']
+    ['title', 'index', 'divider', 'photos', 'photos', 'photos', 'podium', 'ranking', 'challenges', 'closing']
   )
   const noche = album.sections.find((s) => s.id === 'noche')!
   assert.equal(noche.page, 2)
@@ -108,10 +108,22 @@ test('buildAlbum: secciones en orden, 4 fotos por hoja y el índice apunta a la 
   assert.equal(hoja23.photos.length, 4)
   assert.equal(sigue23.photos.length, 1)
   assert.equal(sigue23.dayLabel, null)
-  // El reto C no tiene fotos: no aparece.
+  // Los retos van en un índice compacto (una hoja); el reto C no tiene fotos y no aparece.
+  const retos = album.sections.find((s) => s.id === 'retos')!
   assert.deepEqual(
-    album.sections.find((s) => s.id === 'retos')!.entries.map((e) => e.page),
-    [9, 10]
+    retos.entries.map((e) => [e.challengeId, e.page]),
+    [
+      ['a', 8],
+      ['b', 8],
+    ]
+  )
+  const indice = album.pages[8] as Extract<AlbumPage, { kind: 'challenges' }>
+  assert.deepEqual(
+    indice.rows.map((r) => [r.challenge.id, r.count]),
+    [
+      ['a', 1],
+      ['b', 1],
+    ]
   )
   assert.equal(album.sections.at(-1)!.page, album.pages.length - 1)
 })

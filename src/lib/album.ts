@@ -193,6 +193,15 @@ export function downloadUrl(photo: AlbumPhoto): string {
 
 export const PHOTOS_PER_PAGE = 4
 export const RANKING_ROWS_PER_PAGE = 10
+/** Retos por hoja en el índice de retos; la primera lleva el título y entra uno menos. */
+export const CHALLENGES_PER_PAGE = 6
+
+/** Un reto en el índice de retos: cuántas fotos tiene y unas miniaturas. */
+export interface ChallengeSummary {
+  challenge: AlbumChallenge
+  count: number
+  preview: AlbumPhoto[]
+}
 
 export type AlbumPage =
   | { kind: 'title' }
@@ -200,8 +209,6 @@ export type AlbumPage =
   | { kind: 'divider'; emoji: string; title: string; subtitle: string }
   | {
       kind: 'photos'
-      /** Lista con la que se recorre el visor al tocar una foto de esta hoja. */
-      list: 'noche' | { challengeId: string }
       heading: string
       /** Solo en la primera hoja de cada día de "La noche". */
       dayLabel: string | null
@@ -209,6 +216,8 @@ export type AlbumPage =
     }
   | { kind: 'podium'; rows: RankingRow[]; total: number }
   | { kind: 'ranking'; rows: RankingRow[] }
+  /** Índice de retos: cada uno abre sus fotos en el visor (las fotos ya están en "La noche"). */
+  | { kind: 'challenges'; rows: ChallengeSummary[]; first: boolean; total: number }
   | { kind: 'closing' }
 
 export interface AlbumSection {
@@ -216,8 +225,8 @@ export interface AlbumSection {
   emoji: string
   title: string
   page: number
-  /** Accesos directos dentro de la sección (cada hora, cada reto). */
-  entries: { label: string; page: number }[]
+  /** Accesos directos dentro de la sección (cada hora, cada reto). Los retos abren sus fotos en el visor. */
+  entries: { label: string; page: number; challengeId?: string }[]
 }
 
 export interface Album {
@@ -244,7 +253,7 @@ function chunk<T>(items: T[], size: number): T[][] {
 
 /**
  * Arma el álbum hoja por hoja: portada, índice, la noche (por hora), ranking de retos,
- * los retos (cada uno con sus fotos) y el cierre. Las secciones vacías no se incluyen.
+ * el índice de retos y el cierre. Las secciones vacías no se incluyen.
  */
 export function buildAlbum(photos: AlbumPhoto[], challenges: AlbumChallenge[]): Album {
   const pages: AlbumPage[] = [{ kind: 'title' }, { kind: 'index' }]
@@ -264,7 +273,6 @@ export function buildAlbum(photos: AlbumPhoto[], challenges: AlbumChallenge[]): 
       chunk(group.photos, PHOTOS_PER_PAGE).forEach((list, i) =>
         pages.push({
           kind: 'photos',
-          list: 'noche',
           heading: group.label,
           dayLabel: i === 0 ? group.dayLabel : null,
           photos: list,
@@ -291,22 +299,26 @@ export function buildAlbum(photos: AlbumPhoto[], challenges: AlbumChallenge[]): 
     byChallenge.set(photo.challenge.id, list)
   }
   for (const [id, list] of byChallenge) byChallenge.set(id, dedupePhotos(list))
-  const withPhotos = challenges.filter((c) => byChallenge.has(c.id))
-  if (withPhotos.length > 0) {
+  // Las fotos de cada reto ya están en "La noche" (con el reto anotado abajo): acá va un índice
+  // compacto y cada reto abre sus fotos en el visor, en vez de repetirlas en otras 70 páginas.
+  const summaries: ChallengeSummary[] = challenges
+    .filter((c) => byChallenge.has(c.id))
+    .map((challenge) => {
+      const list = byChallenge.get(challenge.id)!
+      return { challenge, count: list.length, preview: list.slice(0, 3) }
+    })
+  if (summaries.length > 0) {
     const section: AlbumSection = { id: 'retos', emoji: '📸', title: 'Los retos', page: pages.length, entries: [] }
-    pages.push({ kind: 'divider', emoji: '📸', title: 'Los retos', subtitle: `${withPhotos.length} retos cumplidos en fotos` })
-    for (const challenge of withPhotos) {
-      section.entries.push({ label: `${challenge.emoji} ${shortChallengeTitle(challenge.title)}`, page: pages.length })
-      chunk(byChallenge.get(challenge.id)!, PHOTOS_PER_PAGE).forEach((list) =>
-        pages.push({
-          kind: 'photos',
-          list: { challengeId: challenge.id },
-          heading: `${challenge.emoji} ${challenge.title}`,
-          dayLabel: null,
-          photos: list,
+    const first = summaries.slice(0, CHALLENGES_PER_PAGE - 1)
+    ;[first, ...chunk(summaries.slice(first.length), CHALLENGES_PER_PAGE)].forEach((rows, i) => {
+      for (const row of rows)
+        section.entries.push({
+          label: `${row.challenge.emoji} ${shortChallengeTitle(row.challenge.title)}`,
+          page: pages.length,
+          challengeId: row.challenge.id,
         })
-      )
-    }
+      pages.push({ kind: 'challenges', rows, first: i === 0, total: summaries.length })
+    })
     sections.push(section)
   }
 

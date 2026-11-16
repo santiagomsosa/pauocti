@@ -2,7 +2,7 @@ import Image from 'next/image'
 import { Polaroid } from '@/components/Polaroid'
 import { BotanicalDivider } from '@/components/decorations'
 import { cn } from '@/lib/utils'
-import { ALBUM_CLOSING_SRC, formatTime } from '@/lib/album'
+import { ALBUM_CLOSING_SRC, formatTime, shortChallengeTitle } from '@/lib/album'
 import type { AlbumPage as Page, AlbumPhoto, AlbumSection, RankingRow } from '@/lib/album'
 
 const MEDALS = ['🥇', '🥈', '🥉']
@@ -14,8 +14,9 @@ export interface PageContext {
   sections: AlbumSection[]
   totalChallenges: number
   onJump: (page: number) => void
-  onPhoto: (page: Extract<Page, { kind: 'photos' }>, photo: AlbumPhoto) => void
+  onPhoto: (photo: AlbumPhoto) => void
   onGuest: (guestId: string) => void
+  onChallenge: (challengeId: string) => void
 }
 
 /** Las medidas van en unidades de la hoja (cqw/cqh): el contenido se achica o agranda con el libro. */
@@ -34,33 +35,29 @@ function PhotosPage({ page, number, ctx }: { page: Extract<Page, { kind: 'photos
       <div className="flex h-full flex-col">
         <header className="h-[11cqh] text-center">
           {page.dayLabel && <p className="font-title text-[2.6cqw] uppercase tracking-[0.2em] text-stone-400">{page.dayLabel}</p>}
-          {page.list === 'noche' ? (
-            <h2 className="truncate font-script text-[8cqw] leading-tight text-stone-800">
-              {page.heading}
-            </h2>
-          ) : (
-            // Los títulos de los retos son frases largas: van en letra a mano, en hasta dos líneas.
-            <h2 className="line-clamp-2 pt-[1cqh] font-pen text-[3.8cqw] leading-snug text-stone-800">
-              {page.heading}
-            </h2>
-          )}
+          <h2 className="truncate font-script text-[8cqw] leading-tight text-stone-800">{page.heading}</h2>
         </header>
         <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-x-[4cqw] gap-y-[2cqh] pt-[2cqh]">
           {page.photos.map((photo, i) => (
             <div key={photo.id} className="flex flex-col items-center">
-              <div className="w-[min(100%,calc(39cqh-5.5rem))]">
+              {/* El ancho deja lugar abajo para el nombre, la hora y el reto. */}
+              <div className="w-[min(100%,calc(39cqh-6.25rem))]">
                 <Polaroid
                   url={photo.url}
                   caption={photo.caption}
-                  challenge={page.list === 'noche' ? photo.challenge : null}
                   index={number * 4 + i}
-                  onClick={() => ctx.onPhoto(page, photo)}
+                  onClick={() => ctx.onPhoto(photo)}
                   ariaLabel={`Ver foto de ${photo.guestName}`}
                   sizes="(max-width: 900px) 45vw, 240px"
                 />
                 <p className="mt-1 truncate text-center text-[10px] text-stone-500">
                   {photo.guestName} · {formatTime(photo.createdAt)}
                 </p>
+                {photo.challenge && (
+                  <p className="truncate text-center text-[9px] leading-tight text-stone-400" title={photo.challenge.title}>
+                    {photo.challenge.emoji} {shortChallengeTitle(photo.challenge.title)}
+                  </p>
+                )}
               </div>
             </div>
           ))}
@@ -189,6 +186,47 @@ export function AlbumPageView({ page, index, ctx }: { page: Page; index: number;
                   {row.completed}
                   <span className="text-[2.8cqw] text-stone-400"> de {ctx.totalChallenges}</span>
                 </span>
+              </li>
+            ))}
+          </ul>
+        </Shell>
+      )
+
+    case 'challenges':
+      return (
+        <Shell number={number}>
+          {page.first && (
+            <header className="mb-[3cqh] text-center">
+              <h2 className="font-script text-[11cqw] leading-tight text-stone-800">Los retos</h2>
+              <p className="mt-[2cqh] text-[3cqw] text-stone-500">{page.total} retos · tocá uno para ver todas sus fotos</p>
+            </header>
+          )}
+          <ul className="space-y-[1.6cqh]">
+            {page.rows.map((row) => (
+              <li key={row.challenge.id}>
+                <button
+                  onClick={() => ctx.onChallenge(row.challenge.id)}
+                  className="flex w-full items-center gap-[3cqw] border-b border-dotted border-stone-200 pb-[1.6cqh] text-left"
+                >
+                  <span className="text-[6cqw] leading-none">{row.challenge.emoji}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="line-clamp-2 text-[3.4cqw] leading-snug text-stone-800">{shortChallengeTitle(row.challenge.title)}</span>
+                    <span className="text-[2.8cqw] text-stone-400">
+                      {row.count} {row.count === 1 ? 'foto' : 'fotos'}
+                    </span>
+                  </span>
+                  <span className="flex shrink-0 -space-x-[3cqw]">
+                    {row.preview.map((photo, i) => (
+                      <span
+                        key={photo.id}
+                        className="relative block h-[11cqw] w-[11cqw] overflow-hidden rounded-[1cqw] border-[0.6cqw] border-white bg-stone-100 shadow-sm"
+                        style={{ rotate: `${(i - 1) * 6}deg` }}
+                      >
+                        <Image src={photo.url} alt="" fill className="object-cover" sizes="64px" />
+                      </span>
+                    ))}
+                  </span>
+                </button>
               </li>
             ))}
           </ul>
