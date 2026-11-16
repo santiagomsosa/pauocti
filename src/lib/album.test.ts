@@ -135,7 +135,7 @@ test('dedupePhotos: deja una por archivo, prefiriendo la que tiene comentario', 
   )
 })
 
-test('buildAlbum: la foto repetida se ve una vez, pero en cada reto donde se usó y sin quitarle puntos', () => {
+test('buildAlbum: la foto repetida se ve una vez y, aunque se haya usado para dos retos, suma uno', () => {
   const p1 = photo('ana', '01:00', { contentKey: 'x', challenge: RETO_A })
   const p2 = photo('ana', '01:01', { contentKey: 'x', challenge: RETO_B })
   const p3 = photo('ana', '01:02', { contentKey: 'x', challenge: RETO_B })
@@ -143,5 +143,33 @@ test('buildAlbum: la foto repetida se ve una vez, pero en cada reto donde se us�
   assert.equal(album.night.length, 1)
   assert.equal(album.byChallenge.get('a')!.length, 1)
   assert.equal(album.byChallenge.get('b')!.length, 1)
-  assert.equal(album.ranking[0].completed, 2)
+  assert.equal(album.ranking[0].completed, 1)
+})
+
+test('ranking: una misma foto usada para dos retos suma uno solo', () => {
+  const rows = challengeRanking([
+    photo('ana', '01:00', { contentKey: 'x', challenge: RETO_A }),
+    photo('ana', '01:05', { contentKey: 'x', challenge: RETO_B }), // la misma foto: no suma
+    photo('beto', '01:00', { challenge: RETO_A }),
+    photo('beto', '02:00', { challenge: RETO_B }),
+  ])
+  assert.deepEqual(
+    rows.map((r) => [r.guestId, r.completed]),
+    [
+      ['beto', 2],
+      ['ana', 1],
+    ]
+  )
+})
+
+test('ranking: si la foto repetida se puede asignar a otro reto, se cuenta (no se pierde un reto)', () => {
+  // X para A y para B, y otra foto Y para A: A con Y y B con X → 2 retos.
+  const rows = challengeRanking([
+    photo('ana', '01:00', { contentKey: 'x', challenge: RETO_A }),
+    photo('ana', '01:05', { contentKey: 'x', challenge: RETO_B }),
+    photo('ana', '01:30', { contentKey: 'y', challenge: RETO_A }),
+  ])
+  assert.equal(rows[0].completed, 2)
+  // Llega a 2 recién con la foto Y (01:30).
+  assert.equal(rows[0].reachedAt, '2026-11-15T01:30:00.000Z')
 })

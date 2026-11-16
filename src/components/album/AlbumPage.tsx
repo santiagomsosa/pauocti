@@ -167,7 +167,7 @@ export function AlbumPageView({ page, index, ctx }: { page: Page; index: number;
             ))}
           </div>
           <p className="mt-[5cqh] text-center text-[3cqw] text-stone-400">
-            Cuenta retos distintos. Si empatan, gana quien terminó primero.
+            Cada reto cuenta una vez y cada foto vale para un solo reto. Si empatan, gana quien llegó primero.
             <br />
             Tocá un nombre para ver sus fotos.
           </p>

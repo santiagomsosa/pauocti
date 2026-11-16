@@ -8,7 +8,7 @@ export const ALBUM_COVER_SRC = '/album/tapa.jpg'
 export const ALBUM_CLOSING_SRC = '/album/cierre.jpg'
 
 /** Canción que arranca al tocar "Abrir el álbum" (en /public). `null` oculta la música. */
-export const ALBUM_SONG_SRC: string | null = null
+export const ALBUM_SONG_SRC: string | null = '/album/cancion.m4a' // "Bancate ese defecto", Charly García
 
 export interface AlbumChallenge {
   id: string
@@ -32,36 +32,71 @@ export interface RankingRow {
   rank: number
   guestId: string
   name: string
-  /** Retos distintos cumplidos (varias fotos del mismo reto cuentan una vez). */
+  /** Retos cumplidos: cada reto cuenta una vez y cada foto vale para un solo reto. */
   completed: number
   /** Cuándo llegó a esa cantidad: desempata a favor de quien terminó antes. */
   reachedAt: string
 }
 
 /**
- * Ranking de retos: cuenta retos distintos por invitado. Si empatan en cantidad,
- * gana quien completó antes su último reto (la primera foto de cada reto es la que cuenta).
+ * Cuántos retos se cumplen como máximo si cada foto (archivo) vale para un solo reto.
+ * Es un emparejamiento fotos ↔ retos: si la foto X se usó para A y B, y otra foto Y para A,
+ * cuenta A con Y y B con X (2 retos), en vez de "gastar" X en A.
+ */
+function maxChallenges(uses: { file: string; challenge: string }[]): number {
+  const options = new Map<string, string[]>() // foto → retos para los que se usó
+  for (const { file, challenge } of uses) {
+    const list = options.get(file) ?? []
+    if (!list.includes(challenge)) list.push(challenge)
+    options.set(file, list)
+  }
+  const fileOf = new Map<string, string>() // reto → foto asignada
+  const assign = (file: string, seen: Set<string>): boolean => {
+    for (const challenge of options.get(file)!) {
+      if (seen.has(challenge)) continue
+      seen.add(challenge)
+      const holder = fileOf.get(challenge)
+      if (holder === undefined || assign(holder, seen)) {
+        fileOf.set(challenge, file)
+        return true
+      }
+    }
+    return false
+  }
+  let count = 0
+  for (const file of options.keys()) if (assign(file, new Set())) count++
+  return count
+}
+
+/**
+ * Ranking de retos. Cada reto cuenta una vez y cada foto vale para un solo reto (la misma foto
+ * subida para dos retos suma uno). Si empatan en cantidad, gana quien llegó antes a ese total.
  */
 export function challengeRanking(photos: AlbumPhoto[]): RankingRow[] {
-  const byGuest = new Map<string, { name: string; firstByChallenge: Map<string, number> }>()
+  const byGuest = new Map<string, { name: string; uses: { file: string; challenge: string; at: number }[] }>()
   for (const photo of photos) {
     if (!photo.challenge) continue
     let entry = byGuest.get(photo.guestId)
     if (!entry) {
-      entry = { name: photo.guestName, firstByChallenge: new Map() }
+      entry = { name: photo.guestName, uses: [] }
       byGuest.set(photo.guestId, entry)
     }
-    const at = new Date(photo.createdAt).getTime()
-    const prev = entry.firstByChallenge.get(photo.challenge.id)
-    if (prev === undefined || at < prev) entry.firstByChallenge.set(photo.challenge.id, at)
+    entry.uses.push({ file: photo.contentKey, challenge: photo.challenge.id, at: new Date(photo.createdAt).getTime() })
   }
 
-  const rows = [...byGuest].map(([guestId, { name, firstByChallenge }]) => ({
-    guestId,
-    name,
-    completed: firstByChallenge.size,
-    reachedAtMs: Math.max(...firstByChallenge.values()),
-  }))
+  const rows = [...byGuest].map(([guestId, { name, uses }]) => {
+    uses.sort((a, b) => a.at - b.at)
+    const completed = maxChallenges(uses)
+    // La hora del desempate: la primera foto con la que el total llega a su valor final.
+    let reachedAtMs = uses.at(-1)!.at
+    for (let k = 1; k <= uses.length; k++) {
+      if (maxChallenges(uses.slice(0, k)) === completed) {
+        reachedAtMs = uses[k - 1].at
+        break
+      }
+    }
+    return { guestId, name, completed, reachedAtMs }
+  })
   rows.sort((a, b) => b.completed - a.completed || a.reachedAtMs - b.reachedAtMs || a.name.localeCompare(b.name, 'es'))
 
   return rows.map((row, i) => ({
