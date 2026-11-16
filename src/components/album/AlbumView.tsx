@@ -8,7 +8,7 @@ import { Book } from '@/components/album/Book'
 import { AlbumPageView } from '@/components/album/AlbumPage'
 import type { PageContext } from '@/components/album/AlbumPage'
 import { Lightbox } from '@/components/album/Lightbox'
-import { ALBUM_COVER_SRC, ALBUM_SONG_SRC, ALBUM_TIME_ZONE, buildAlbum } from '@/lib/album'
+import { ALBUM_COVER_SRC, ALBUM_SONG_SRC, ALBUM_TIME_ZONE, buildAlbum, shortChallengeTitle } from '@/lib/album'
 import type { AlbumChallenge, AlbumPhoto } from '@/lib/album'
 
 /** El ajuste guardado puede ser una fecha ISO o un texto ya escrito ("14 de Noviembre de 2026"). */
@@ -76,6 +76,14 @@ export function AlbumView({
     setViewer({ title: `Fotos de ${list[0].guestName}`, photos: list, index: 0 })
   }
 
+  function showChallenge(challengeId: string) {
+    const list = album.byChallenge.get(challengeId)
+    const challenge = challenges.find((c) => c.id === challengeId)
+    if (!list?.length || !challenge) return
+    setMenuOpen(false)
+    setViewer({ title: `${challenge.emoji} ${shortChallengeTitle(challenge.title)}`, photos: list, index: 0 })
+  }
+
   const ctx: PageContext = {
     coupleNames,
     date,
@@ -88,10 +96,8 @@ export function AlbumView({
     totalChallenges: challenges.length,
     onJump: jump,
     onGuest: showGuest,
-    onPhoto: (p, photo) => {
-      const list = p.list === 'noche' ? album.night : (album.byChallenge.get(p.list.challengeId) ?? p.photos)
-      setViewer({ photos: list, index: Math.max(list.findIndex((x) => x.id === photo.id), 0) })
-    },
+    onPhoto: (photo) => setViewer({ photos: album.night, index: Math.max(album.night.findIndex((x) => x.id === photo.id), 0) }),
+    onChallenge: showChallenge,
   }
 
   const currentSection = [...album.sections].reverse().find((s) => s.page <= page)
@@ -204,7 +210,11 @@ export function AlbumView({
                               {e.label}
                             </button>
                           ) : (
-                            <button key={e.page} onClick={() => jump(e.page)} className="flex w-full gap-2 py-0.5 text-left text-sm leading-snug text-stone-600 hover:text-ink-600">
+                            <button
+                              key={e.challengeId ?? e.page}
+                              onClick={() => (e.challengeId ? showChallenge(e.challengeId) : jump(e.page))}
+                              className="flex w-full gap-2 py-0.5 text-left text-sm leading-snug text-stone-600 hover:text-ink-600"
+                            >
                               {/* El emoji va aparte: si el título ocupa dos líneas, la segunda queda alineada con el texto. */}
                               <span className="shrink-0">{e.label.split(' ')[0]}</span>
                               <span className="line-clamp-2">{e.label.slice(e.label.indexOf(' ') + 1)}</span>
