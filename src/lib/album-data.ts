@@ -1,5 +1,6 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { displayPhotoUrl, PHOTOS_BUCKET } from '@/lib/photos'
+import { SAME_PHOTO_AS } from '@/lib/album-duplicates'
 import type { AlbumChallenge, AlbumPhoto } from '@/lib/album'
 
 export interface AlbumData {
@@ -54,9 +55,12 @@ export async function getAlbumData(): Promise<AlbumData> {
   const folders = [...new Set(rows.map((row) => row.storage_path.split('/').slice(0, -1).join('/')))]
   const fingerprints = await fileFingerprints(supabase, folders)
 
+  // Huella de cada foto: la del archivo, salvo las repetidas revisadas a mano, que toman la de su grupo.
+  const pathById = new Map(rows.map((row) => [row.id, row.storage_path]))
+  const keyOf = (id: string) => fingerprints.get(pathById.get(id) ?? '') ?? id
   const photos = rows.map((row) => ({
     id: row.id,
-    contentKey: fingerprints.get(row.storage_path) ?? row.id,
+    contentKey: keyOf(SAME_PHOTO_AS.get(row.id) ?? row.id),
     url: displayPhotoUrl(row.url),
     guestId: row.guest_id,
     // El nombre de la lista de invitados; si no está, el que quedó guardado en la foto.
